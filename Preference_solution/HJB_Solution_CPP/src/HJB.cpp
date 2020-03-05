@@ -16,7 +16,7 @@ VectorXd csvread(char* filename){
 		 while(getline(vec, line)){
 				istringstream iss(line);
 				if(!(iss>>xval)){break;}
-				v.push_back(xval); 
+				v.push_back(xval/1000); 
 		 }
          for(auto it=v.begin(); it != v.end(); it++){
 			 cout << *it << endl;

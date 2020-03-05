@@ -4,9 +4,10 @@
 close all
 clear all
 clc
+profile on;
 
 %% Step 0: Set up solver
-mex solveCGNatural.cpp;
+mex -openmp solveCGNatural.cpp;
 
 %% Step 1: Specify ambiguity and damage level
 
@@ -242,9 +243,8 @@ rhs_err(iter) = max(max(max(abs(pde_error))));
 lhs_error = max(max(max(abs(out_comp - v1_initial))));
 lhs_err(iter) = lhs_error;
 
-
 while lhs_error > tol % check for convergence
-   tic
+   %tic
    vold = v0 .* ones(size(v0));
    
    if iter > 2000
@@ -262,7 +262,10 @@ while lhs_error > tol % check for convergence
     model.v0   = v0(:);
     model.dt   = dt;
     
+    tic
     out = solveCGNatural(stateSpace, model);
+    toc
+    
     out_comp = reshape(out,size(v0)).*ones(size(r_mat));
 
     iter = iter+1;
@@ -421,7 +424,7 @@ while lhs_error > tol % check for convergence
         fprintf('PDE Converges');
     end
 
-    toc
+    %toc
 end
 
 save([ambiguity,'_',damage_level]); % save HJB solution

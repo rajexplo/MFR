@@ -42,8 +42,18 @@ int main(int argc, char **argv){
 
     	
     VectorXd McD = csvread(argv[1]);
-    cout << "Mcd " << flush;
-    cout << McD << endl;
+    float beta_f = McD.col(0).mean();
+    auto nel = McD.size();
+    VectorXd betafV(nel);
+    betafV.fill(1.0); 
+    float var_beta_f = (McD.col(0) - beta_f*betafV).array().square().mean();
+    cout << "mean " << flush;
+    cout << beta_f << endl;
+    cout << "var" << endl;
+    cout << var_beta_f << endl;    
+
+
+
     const int n=4;
     VectorXd x(n), w(n); 
     quad_points_legendre(x, w, n);
