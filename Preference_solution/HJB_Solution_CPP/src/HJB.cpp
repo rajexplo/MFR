@@ -1,15 +1,34 @@
 #include "HJB.h"
-
 /*
 This function determines the abscisas (x) and weights (w)  for the        %
 % Gauss-Legendre quadrature, of order n>1, on the interval [-1, +1]. 
 */
 
+using namespace Eigen;
 
-
-
-void csvread(){
-        cout << "In function csvread" << endl;
+VectorXd csvread(char* filename){
+         char *data;
+         data=filename;
+         vector<double> v;
+         ifstream vec(data);
+         double xval;
+         string line;
+		 while(getline(vec, line)){
+				istringstream iss(line);
+				if(!(iss>>xval)){break;}
+				v.push_back(xval); 
+		 }
+         for(auto it=v.begin(); it != v.end(); it++){
+			 cout << *it << endl;
+		
+		}
+         int sz=v.size();
+         cout << "sz is " << sz << endl;
+     
+		 Eigen::Map<Eigen::VectorXd>McD(v.data(),v.size()); 
+         return McD;
+         
+         
 } 
 
 
