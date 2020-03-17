@@ -27,5 +27,6 @@ VectorXd csvread(char *filename);
 void quad_points_hermite(VectorXd &x, VectorXd &w, const int n);
 void quad_points_legendre(VectorXd &x, VectorXd &w, const int n);
 void ndGrid(VectorXd r, VectorXd t, VectorXd k, vector<MatrixXd> &r_mat, vector<MatrixXd> &F_mat, vector<MatrixXd> &k_mat);
+VectorXd normpdf(VectorXd &x, float mu, float sigma);
 
 #endif

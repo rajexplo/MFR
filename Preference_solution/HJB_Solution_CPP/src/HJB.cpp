@@ -112,6 +112,16 @@ void ndGrid(VectorXd r, VectorXd t, VectorXd k, vector<MatrixXd> &r_mat, vector<
   k_mat=r_mat_w;
 }
 
+VectorXd normpdf(VectorXd &x, float mu, float sigma){
+  VectorXd y;
+  for (int i=0; i < x.size(); i++){
+    y(i)=exp(-0.5 *pow((1/sigma)*(x (i) - mu), 2) / (sqrt(2*M_PI) * sigma) );  
+
+  }
+
+  return y;
+}
+
 
 
 
