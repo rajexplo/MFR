@@ -18,12 +18,16 @@ VectorXd csvread(char* filename){
 				if(!(iss>>xval)){break;}
 				v.push_back(xval/1000); 
 		 }
-         for(auto it=v.begin(); it != v.end(); it++){
+       // DEBUG FLAG
+       #if 0
+		 for(auto it=v.begin(); it != v.end(); it++){
 			 cout << *it << endl;
 		
-		}
-         int sz=v.size();
-         cout << "sz is " << sz << endl;
+		 }
+		 int sz=v.size();
+		 cout << "sz is " << sz << endl;
+       #endif
+         
      
 		 Eigen::Map<Eigen::VectorXd>McD(v.data(),v.size()); 
          return McD;
@@ -66,4 +70,49 @@ void quad_points_legendre(VectorXd &x, VectorXd &w, const int n){
    }
    w = 2*Vsorted.transpose().col(0).array().pow(2);
 }
+
+void ndGrid(VectorXd r, VectorXd t, VectorXd k, vector<MatrixXd> &r_mat, vector<MatrixXd> &F_mat, vector<MatrixXd> &k_mat){
+  vector<MatrixXd> r_mat_w;
+  MatrixXd r_w(r.rows(), t.rows());
+  
+  for (int c=0; c < r_w.cols(); c++){
+    r_w.col(c)=r;
+  }
+
+ 
+  for (int i=0; i < k.size(); i++){
+    r_mat_w.push_back(r_w);
+    
+  }
+
+  r_mat=r_mat_w;
+
+  r_w.fill(0.0);
+
+   for (int r=0; r < r_w.rows(); r++){
+     r_w.row(r)=t.transpose();
+  }
+
+   r_mat_w.clear();
+   for (int i=0; i < k.size(); i++){
+    r_mat_w.push_back(r_w);
+   }
+
+   F_mat=r_mat_w;
+
+
+    r_w.fill(0.0);
+    r_mat_w.clear();
+
+  for (int i=0; i < k.size(); i++){
+    r_w.fill(k(i));
+    r_mat_w.push_back(r_w);
+   }
+
+  k_mat=r_mat_w;
+}
+
+
+
+
  
