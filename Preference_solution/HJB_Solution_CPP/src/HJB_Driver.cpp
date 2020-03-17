@@ -111,15 +111,15 @@ int main(int argc, char **argv){
     // Solve HJB system
 
     float r_min=  0.0;
-    float r_max = 9.0;
-    float F_min = 0.0;
-    float F_max = 4000;
-    float k_min = 0.0;
-    float k_max=  18.0;
+    decltype(r_min) r_max = 9.0;
+    decltype(r_min) F_min = 0.0;
+    decltype(r_min) F_max = 4000;
+    decltype(r_min) k_min = 0.0;
+    decltype(r_min) k_max=  18.0;
 
     float hr = 0.05;
-    float ht = 25.0;
-    float hk = 0.15;
+    decltype(hr) ht = 25.0;
+    decltype(hr) hk = 0.15;
 
     float rSize = r_max / hr + 1;
     float FSize = F_max / ht + 1;
@@ -128,12 +128,13 @@ int main(int argc, char **argv){
     
 
     VectorXd r,t,k;
+   
     r.setLinSpaced(ceil(rSize),r_min,r_max);
     t.setLinSpaced(ceil(FSize),F_min,F_max);
     k.setLinSpaced(ceil(kSize),k_min,k_max);
     vector<MatrixXd> r_mat;
-    vector<MatrixXd> F_mat;
-    vector<MatrixXd> k_mat;
+    decltype(r_mat) F_mat;
+    decltype(r_mat) k_mat;
     ndGrid(r, t, k, r_mat, F_mat, k_mat);
 
     int quadrature=1;
@@ -151,24 +152,24 @@ int main(int argc, char **argv){
       v0.push_back(kappa*r_mat[i] + (1-kappa)*k_mat[i] -beta_f * F_mat[i]);
     }
 
-    vector<MatrixXd> v1_initial;
+    decltype(v0) v1_initial;
      for (int i=0; i < r_mat.size(); i++){
       v1_initial.push_back(v0[i]);
     }
 
-   vector<MatrixXd> out;
+   decltype(v0) out;
    for (int i=0; i < r_mat.size(); i++){
       out.push_back(v0[i]);
     }
 
-   vector<MatrixXd> vold;
+   decltype(v0) vold;
    for (int i=0; i < r_mat.size(); i++){
       vold.push_back(v0[i]);
     }
 
    int ite=1;
 
-   vector<MatrixXd> v0_dt;
+   decltype(v0) v0_dt;
    MatrixXd v0_dt_temp(r_mat[0].rows(), r_mat[0].cols());
    v0_dt_temp.fill(0.0);
    

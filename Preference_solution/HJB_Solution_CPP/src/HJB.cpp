@@ -1,8 +1,5 @@
 #include "HJB.h"
-/*
-This function determines the abscisas (x) and weights (w)  for the        %
-% Gauss-Legendre quadrature, of order n>1, on the interval [-1, +1]. 
-*/
+
 
 using namespace Eigen;
 
@@ -35,7 +32,10 @@ VectorXd csvread(char* filename){
          
 } 
 
-
+/*
+This function determines the abscisas (x) and weights (w)  for the        %
+% Gauss-Legendre quadrature, of order n>1, on the interval [-1, +1]. 
+*/
 void quad_points_legendre(VectorXd &x, VectorXd &w, const int n){
 	VectorXd a(n-1);
 
@@ -118,11 +118,16 @@ VectorXd normpdf(VectorXd &x, float mu, float sigma){
     y(i)=exp(-0.5 *pow((1/sigma)*(x (i) - mu), 2) / (sqrt(2*M_PI) * sigma) );  
 
   }
-
   return y;
 }
 
+/*
+auto f = [](int a, int b) -> int
+    {
+        return a * b;
+    };
 
+*/
 
 
  
