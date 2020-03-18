@@ -74,7 +74,7 @@ int main(int argc, char **argv){
     float mu_k    = -0.034977443912449;
     float psi_0   = 0.112733407891680;
     float psi_1   = 0.142857142857143;
-    float power   = 2;
+    int power   = 2;
     float gamma_1 =  0.00017675;
     float gamma_2 =  2.*0.0022;
     float gamma_2_plus = 2.*0.0197;
@@ -167,8 +167,9 @@ int main(int argc, char **argv){
       vold.push_back(v0[i]);
     }
 
-   int ite=1;
+   int itr=1;
 
+   //v0_dt data structure
    decltype(v0) v0_dt;
    MatrixXd v0_dt_temp(r_mat[0].rows(), r_mat[0].cols());
    v0_dt_temp.fill(0.0);
@@ -187,7 +188,134 @@ int main(int argc, char **argv){
      v0_dt[k].col(0)=(1.0/ht)*(v0[k].col(1)-v0[k].col(0));
     }
 
+   
+
+      
+    //v0_dr data structure
+   decltype(v0) v0_dr;
+   MatrixXd v0_dr_temp(r_mat[0].rows(), r_mat[0].cols());
+   v0_dr_temp.fill(0.0);
+   
+   for (int i=0; i < r_mat.size(); i++){
+        v0_dr.push_back(v0_dr_temp);
+    }
+   
+    
+    for(int k=0; k < v0_dr.size(); k++){
+     for(j=1; j< v0_dr[0].rows()-1; j++){
+       v0_dr[k].row(j)= (1.0/(2.0*hr))*(v0[k].row(j+1)-v0[k].row(j-1));
+      }
+     v0_dr[k].row(j)=(1.0/hr)*(v0[k].row(j)-v0[k].row(j-1));
+     v0_dr[k].row(0)=(1.0/hr)*(v0[k].row(1)-v0[k].row(0));
+    }
      
+
+      //v0_dk data structure
+   decltype(v0) v0_dk;
+   MatrixXd v0_dk_temp(r_mat[0].rows(), r_mat[0].cols());
+   v0_dk_temp.fill(0.0);
+   
+   for (int i=0; i < r_mat.size(); i++){
+        v0_dk.push_back(v0_dr_temp);
+    }
+   
+    
+    for( int k=1; k < v0_dk.size()-1; k++){
+      v0_dk[k] = (1/(2*hk))*(v0[k+1]-v0[k-1]);
+      j=k;
+    }
+    v0_dk[j] = (1/hk)*(v0[j]-v0[j-1]);
+    v0_dk[0] = (1/hk)*(v0[1]-v0[0]);
+    
+    
+    //v0_dtt data structure
+   decltype(v0) v0_dtt;
+     
+   for (int i=0; i < r_mat.size(); i++){
+        v0_dtt.push_back(v0_dt_temp);
+    }
+
+  
+   for(int k=0; k < v0_dtt.size(); k++){
+     for(j=1; j< v0_dtt[0].cols()-1; j++){
+       
+       v0_dtt[k].col(j)= (1.0/(ht*ht))*(v0[k].col(j+1) + v0[k].col(j-1)-2*v0[k].col(j));
+      }
+     v0_dtt[k].col(j)=(1.0/(ht*ht))*(v0[k].col(j) + v0[k].col(j-2) - 2 * v0[k].col(j-1) );
+     v0_dtt[k].col(0)=(1.0/(ht*ht))*(v0[k].col(2) + v0[k].col(0) -  2 * v0[k].col(1));
+    }
+
+
+    //v0_drr data structure
+   decltype(v0) v0_drr;
+  
+   for (int i=0; i < r_mat.size(); i++){
+        v0_drr.push_back(v0_dr_temp);
+    }
+      
+    for(int k=0; k < v0_drr.size(); k++){
+     for(j=1; j< v0_drr[0].rows()-1; j++){
+       v0_drr[k].row(j)= (1.0/(hr*hr))*(v0[k].row(j+1) + v0[k].row(j-1) - 2*v0[k].row(j));
+      }
+     v0_drr[k].row(j)=(1.0/(hr*hr))*(v0[k].row(j) + v0[k].row(j-2) - 2*v0[k].row(j-1));
+     v0_drr[k].row(0)=(1.0/(hr*hr))*(v0[k].row(2) + v0[k].row(0) - 2*v0[k].row(1));
+    }
+
+    
+     //v0_dkk data structure
+   decltype(v0) v0_dkk;
+   for (int i=0; i < r_mat.size(); i++){
+        v0_dkk.push_back(v0_dk_temp);
+    }
+   
+    
+    for( int k=1; k < v0_dk.size()-1; k++){
+      v0_dkk[k] = (1/(hk*hk))*(v0[k+1] + v0[k-1] - 2.0* v0[k]);
+      j=k;
+    }
+    v0_dkk[j] = (1/(hk*hk))*(v0[j] + v0[j-2]-2*v0[j-1]);
+    v0_dkk[0] = (1/(hk*hk))*(v0[2] + v0[0]-2.0*v0[1]);
+
+    decltype(v0) B1;
+    for (int i=0; i < r_mat.size(); i++){
+        B1.push_back(v0_dk_temp);
+    }
+    decltype(v0) e;
+    for (int i=0; i < r_mat.size(); i++){
+        e.push_back(v0_dk_temp);
+    }
+
+    decltype(v0) e_hat;
+    for (int i=0; i < r_mat.size(); i++){
+        e_hat.push_back(v0_dk_temp);
+    }
+
+    float bcomp = crit/beta_f;
+    float C1 = -delta*kappa;
+
+    MatrixXd dummyMat(F_mat[0].rows(), F_mat[0].cols());
+    dummyMat.fill(1.0);
+    for(int i=0; i < B1.size(); i++){
+      MatrixXd temp = beta_f*(F_mat[i]) - gamma_bar*dummyMat;
+      MatrixXd temp1 = temp.array().pow(power-1);
+      MatrixXd comp=compMatrix(F_mat[i], bcomp);
+      temp = temp1.cwiseProduct(comp);
+      MatrixXd etemp = r_mat[i].array().exp();
+      MatrixXd term1 = v0_dr[i];
+      MatrixXd term2 = xi_d *(gamma_1*dummyMat + gamma_2*beta_f*F_mat[i] + gamma_2_plus*temp);
+      MatrixXd term3=v0_dt[i].cwiseProduct(etemp);
+      B1[i]=term1 - term2.cwiseProduct(beta_f*etemp)-term3;
+      e[i] = C1*B1[i].cwiseInverse();
+      e_hat[i]=e[i];
+    }
+
+    
+      
+
+    cout << e[0].row(0) << endl;
+
+
+      
     // const int n=4;
     // VectorXd x(n), w(n); 
     // quad_points_legendre(x, w, n);

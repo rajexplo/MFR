@@ -110,7 +110,7 @@ v0_dt(:,2:end-1,:) = (1./(2.*ht)).*(v0(:,3:end,:)-v0(:,1:end-2,:));
 v0_dt(:,end,:) = (1./ht).*(v0(:,end,:)-v0(:,end-1,:));
 v0_dt(:,1,:) = (1./ht).*(v0(:,2,:)-v0(:,1,:));
 
-%%% Start From here!!!
+
 v0_dr = zeros(size(v0));
 v0_dr(2:end-1,:,:) = (1./(2.*hr)).*(v0(3:end,:,:)-v0(1:end-2,:,:));
 v0_dr(end,:,:) = (1./hr).*(v0(end,:,:)-v0(end-1,:,:));
@@ -138,7 +138,7 @@ v0_dkk(:,:,2:end-1) = (1./(hk.^2)).*(v0(:,:,3:end)+v0(:,:,1:end-2)-2.*v0(:,:,2:e
 v0_dkk(:,:,end) = (1./(hk.^2)).*(v0(:,:,end)+v0(:,:,end-2)-2.*v0(:,:,end-1));
 v0_dkk(:,:,1) = (1./(hk.^2)).*(v0(:,:,3)+v0(:,:,1)-2.*v0(:,:,2));
 
-% FOC
+%%% Start From here!!!
 B1 = v0_dr-xi_d.*(gamma_1(1)+gamma_2(1)*(F_mat).*beta_f+gamma_2_plus(1).*(F_mat.*beta_f-gamma_bar).^(power-1).*(F_mat>=(crit./beta_f))) ...
     .*beta_f.*exp(r_mat)-v0_dt.*exp(r_mat);  
 C1 = -delta.*kappa;
@@ -199,6 +199,7 @@ R_2 = 1./xi_p.*(I_2 - J_2);
 drift_distort = (pi_tilde_1_norm.*J_1 ...
     +pi_tilde_2_norm.*J_2); 
 %%Tomorrow Traget
+
 if (weight == 0 || weight == 1)
     RE = pi_tilde_1_norm.*R_1 + pi_tilde_2_norm.*R_2;
 else

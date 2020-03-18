@@ -1,6 +1,4 @@
 #include "HJB.h"
-
-
 using namespace Eigen;
 
 VectorXd csvread(char* filename){
@@ -120,6 +118,22 @@ VectorXd normpdf(VectorXd &x, float mu, float sigma){
   }
   return y;
 }
+
+
+MatrixXd compMatrix(MatrixXd &mat, float comFactor){
+  MatrixXd matC(mat.rows(), mat.cols());
+   
+  for(int i=0; i < mat.rows(); i++){
+    for(int j=0; j < mat.cols(); j++){
+      if ((mat(i,j) - comFactor) >= EPS){
+	  matC(i,j)=1;
+	}
+   }
+}
+  return matC;
+}
+
+
 
 /*
 auto f = [](int a, int b) -> int
