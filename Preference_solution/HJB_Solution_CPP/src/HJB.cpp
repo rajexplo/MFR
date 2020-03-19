@@ -120,12 +120,12 @@ VectorXd normpdf(VectorXd &x, float mu, float sigma){
 }
 
 
-MatrixXd compMatrix(MatrixXd &mat, float comFactor){
+MatrixXd compMatrix(MatrixXd &mat, float comFactor, float coeff){
   MatrixXd matC(mat.rows(), mat.cols());
    
   for(int i=0; i < mat.rows(); i++){
     for(int j=0; j < mat.cols(); j++){
-      if ((mat(i,j) - comFactor) >= EPS){
+      if ((coeff*mat(i,j) - comFactor) >= EPS){
 	  matC(i,j)=1;
 	}
    }
@@ -133,15 +133,22 @@ MatrixXd compMatrix(MatrixXd &mat, float comFactor){
   return matC;
 }
 
+void scale_2_fnc(dataGen* intData, const float x){
+    vector <MatrixXd> f_out;
+    cout << intData->F_mat[0].row(0) << endl;
+
+    
+}
 
 
-/*
-auto f = [](int a, int b) -> int
-    {
-        return a * b;
-    };
 
-*/
+
+vector<MatrixXd> quad_int(const float a, const float b, const int n){
+
+  vector <MatrixXd> scale_2;
+  return scale_2;
+}
+
 
 
  

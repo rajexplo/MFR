@@ -25,11 +25,18 @@ using Eigen::VectorXi;
 using Eigen::EigenSolver;
 using Eigen::MatrixXcd;
 
+typedef struct foo{
+  vector<MatrixXd> F_mat;
+}dataGen;
+
 VectorXd csvread(char *filename);
 void quad_points_hermite(VectorXd &x, VectorXd &w, const int n);
 void quad_points_legendre(VectorXd &x, VectorXd &w, const int n);
 void ndGrid(VectorXd r, VectorXd t, VectorXd k, vector<MatrixXd> &r_mat, vector<MatrixXd> &F_mat, vector<MatrixXd> &k_mat);
 VectorXd normpdf(VectorXd &x, float mu, float sigma);
-MatrixXd compMatrix(MatrixXd &mat, float comFactor);
+MatrixXd compMatrix(MatrixXd &mat, float comFactor, float coeff);
+void scale_2_fnc(dataGen* intData);
+
+
 
 #endif

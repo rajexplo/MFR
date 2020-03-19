@@ -298,7 +298,7 @@ int main(int argc, char **argv){
     for(int i=0; i < B1.size(); i++){
       MatrixXd temp = beta_f*(F_mat[i]) - gamma_bar*dummyMat;
       MatrixXd temp1 = temp.array().pow(power-1);
-      MatrixXd comp=compMatrix(F_mat[i], bcomp);
+      MatrixXd comp=compMatrix(F_mat[i], bcomp, 1.0);
       temp = temp1.cwiseProduct(comp);
       MatrixXd etemp = r_mat[i].array().exp();
       MatrixXd term1 = v0_dr[i];
@@ -311,10 +311,13 @@ int main(int argc, char **argv){
 
     
       
+    dataGen *intData = new dataGen;
 
-    cout << e[0].row(0) << endl;
+    intData->F_mat= F_mat;
+    //cout << intData->F_mat[0].row(0) << endl;
 
-
+    scale_2_fnc(intData);
+     
       
     // const int n=4;
     // VectorXd x(n), w(n); 
