@@ -305,18 +305,106 @@ int main(int argc, char **argv){
       MatrixXd term2 = xi_d *(gamma_1*dummyMat + gamma_2*beta_f*F_mat[i] + gamma_2_plus*temp);
       MatrixXd term3=v0_dt[i].cwiseProduct(etemp);
       B1[i]=term1 - term2.cwiseProduct(beta_f*etemp)-term3;
-      e[i] = C1*B1[i].cwiseInverse();
+      e[i] = -C1*B1[i].cwiseInverse();
       e_hat[i]=e[i];
     }
 
+    decltype(v0) Acoeff;
+    v0_dr_temp.fill(1.0);
+    for (int i=0; i < r_mat.size(); i++){
+      Acoeff.push_back(v0_dr_temp);
+    }
+
+    decltype(v0) Bcoeff;
+    decltype(v0) jtemp;
+    decltype(v0) i_k;
     
+    v0_dr_temp.fill(0.0);
+    for (int i=0; i < r_mat.size(); i++){
+      Bcoeff.push_back(v0_dr_temp);
+      jtemp.push_back(v0_dr_temp);
+      i_k.push_back(v0_dr_temp);
+    }
+     float Ccoeff = -alpha - 1./phi_1;
+    for(int k=0; k < Bcoeff.size(); k++){
+      MatrixXd term1 = delta *(1-kappa)*phi_1*dummyMat + phi_0*phi_1* v0_dk[k];
+      MatrixXd term2 = (1/(psi_0*0.5))*delta*(1-kappa)*v0_dr[k].cwiseInverse();
+      MatrixXd term3 = 0.5*(r_mat[k] - k_mat[k]);
+      MatrixXd term4 = term3.array().exp();
+      float denom = 1/(delta*(1-kappa)*phi_1);
+      MatrixXd term5 = term1.cwiseProduct(term2);
+      MatrixXd term6 = term5.cwiseProduct(term4);
+      Bcoeff[k]= denom*term6;
+      term1 = Bcoeff[k].array().square();
+      term2 = 4*Ccoeff*Acoeff[k];
+      term3 = term1 - term2;
+      term3 = term3.array().sqrt();
+      term4 = -Bcoeff[k] + term3;
+      term5 = Acoeff[k].array().cwiseInverse();
+      term6 = 0.5*term4.cwiseProduct(term5);
+      jtemp[k] = term6.array().square();
+
+      term1 = (delta*(1.0 -kappa))*dummyMat;
+      term2 = v0_dr[k]*psi_0 * 0.5;
+      term3 = term2.cwiseInverse();
+      term4 = term1.cwiseProduct(term3);
+      term5 = jtemp[k].array().pow(0.5);
+      term6 = term5.cwiseProduct(term4);
+      MatrixXd term7 = 0.5*(r_mat[k] - k_mat[k]);
+      MatrixXd term8 = term7.array().exp();
+      i_k[k] = alpha*dummyMat - jtemp[k] - term6.cwiseProduct(term8);
+      
+     }
+
+
+    decltype(v0) a_1;
+    decltype(v0) b_1;
+    decltype(v0) c_1;
+    decltype(v0) lambda_tilde_1;
+    decltype(v0) beta_tilde_1;
+    decltype(v0) I_1;
+    
+    MatrixXd beta_fM = beta_f*dummyMat;
+    
+
+   for (int i=0; i < r_mat.size(); i++){
+      a_1.push_back(v0_dr_temp);
+      b_1.push_back(v0_dr_temp);
+      c_1.push_back(v0_dr_temp);
+      lambda_tilde_1.push_back(v0_dr_temp);
+      beta_tilde_1.push_back(v0_dr_temp);
+      I_1.push_back(v0_dr_temp);
+}
+
+   for(int k=0; k < Bcoeff.size(); k++){
+     MatrixXd term1=r_mat[k].array().exp();
+     b_1[k]=xi_d*gamma_1*e_hat[k].cwiseProduct(term1);
+     MatrixXd term2=2.0*xi_d*gamma_2*e_hat[k].cwiseProduct(term1);
+     c_1[k]=term2.cwiseProduct(F_mat[k]);
+     lambda_tilde_1[k] = lambda*dummyMat + (1/xi_p) * c_1[k];
+     MatrixXd term3 = lambda_tilde_1[k].array().cwiseInverse();
+     MatrixXd term4 = (1/xi_p)*(c_1[k].cwiseProduct(term3));
+     MatrixXd term5 = (1.0/xi_p)*lambda_tilde_1[k].cwiseInverse();
+     MatrixXd term6 = term5.cwiseProduct(b_1[k]);
+     beta_tilde_1[k] = beta_fM - beta_fM.cwiseProduct(term4) - term6;
+   }
+
+ 
+
+   cout << beta_tilde_1[4].row(11) << endl;
+
+    
+
+
+    
+	
       
     dataGen *intData = new dataGen;
 
     intData->F_mat= F_mat;
     //cout << intData->F_mat[0].row(0) << endl;
 
-    scale_2_fnc(intData);
+    //scale_2_fnc(intData);
      
       
     // const int n=4;

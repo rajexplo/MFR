@@ -138,7 +138,7 @@ v0_dkk(:,:,2:end-1) = (1./(hk.^2)).*(v0(:,:,3:end)+v0(:,:,1:end-2)-2.*v0(:,:,2:e
 v0_dkk(:,:,end) = (1./(hk.^2)).*(v0(:,:,end)+v0(:,:,end-2)-2.*v0(:,:,end-1));
 v0_dkk(:,:,1) = (1./(hk.^2)).*(v0(:,:,3)+v0(:,:,1)-2.*v0(:,:,2));
 
-%%% Start From here!!!
+
 B1 = v0_dr-xi_d.*(gamma_1(1)+gamma_2(1)*(F_mat).*beta_f+gamma_2_plus(1).*(F_mat.*beta_f-gamma_bar).^(power-1).*(F_mat>=(crit./beta_f))) ...
     .*beta_f.*exp(r_mat)-v0_dt.*exp(r_mat);  
 C1 = -delta.*kappa;
@@ -146,6 +146,7 @@ e = -C1./B1;
 e_hat = e;
 
 Acoeff = ones(size(r_mat));
+
 Bcoeff = ((delta.*(1-kappa).*phi_1+phi_0.*phi_1.*v0_dk).*delta.*(1-kappa)./(v0_dr.*psi_0.*0.5)...
     .*exp(0.5.*(r_mat-k_mat)))./(delta.*(1-kappa).*phi_1);
 Ccoeff = -alpha - 1./phi_1;
@@ -158,10 +159,15 @@ b_1 = xi_d.*e_hat.*exp(r_mat).*gamma_1;
 c_1 = 2.*xi_d.*e_hat.*exp(r_mat).*F_mat.*gamma_2;
 lambda_tilde_1 = lambda+c_1./xi_p;
 beta_tilde_1 = beta_f-c_1./xi_p./lambda_tilde_1.*beta_f-1./xi_p./lambda_tilde_1.*b_1;
+
+% Start here
+
 I_1 = a_1-0.5.*log(lambda).*xi_p + 0.5.*log(lambda_tilde_1).*xi_p ...
     +0.5.*lambda.*beta_f.^2.*xi_p -0.5.*lambda_tilde_1.*(beta_tilde_1).^2.*xi_p;
+
 J_1_without_e = xi_d.*(gamma_1.*beta_tilde_1 ...
     +gamma_2.*F_mat.*(beta_tilde_1.^2+1./lambda_tilde_1)).*exp(r_mat) ;
+
 pi_tilde_1 = weight.*exp(-1./xi_p.*I_1);
 
 scale_2_fnc = @(x) exp(-1./xi_p.*xi_d.*(gamma_1.*x ...

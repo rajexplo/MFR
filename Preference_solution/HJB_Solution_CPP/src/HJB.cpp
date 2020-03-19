@@ -136,8 +136,6 @@ MatrixXd compMatrix(MatrixXd &mat, float comFactor, float coeff){
 void scale_2_fnc(dataGen* intData, const float x){
     vector <MatrixXd> f_out;
     cout << intData->F_mat[0].row(0) << endl;
-
-    
 }
 
 
