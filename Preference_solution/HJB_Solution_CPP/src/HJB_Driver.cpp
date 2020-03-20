@@ -24,7 +24,6 @@ int main(int argc, char **argv){
     if (ambiguity==1)
 	{
 	   xi_p = 1/4000.0;
-	   cout << "xi_p is " << xi_p << endl;   
 	}
     else
 	{
@@ -35,7 +34,6 @@ int main(int argc, char **argv){
      
    if (damage_level==0)
 	{
-          cout << "In high" << endl;
 	   weight = 1.0;
 	}
    else if (damage_level==1)
@@ -54,8 +52,7 @@ int main(int argc, char **argv){
    {
        cout << "Damege level not defined" << endl;
    }
-  
-   cout << "weight is " << weight << endl;   
+    
     VectorXd McD = csvread(argv[1]);
     float beta_f = McD.col(0).mean();
     auto nel = McD.size();
@@ -104,7 +101,6 @@ int main(int argc, char **argv){
 
     auto sigma_d_temp = dee*(Sigma*dee.transpose());
     float sigma_d=sqrt(sigma_d_temp(0, 0));
-    cout << var_beta_f << endl;
     float xi_d=-1*(1-kappa);
     float bar_gamma_2_plus=(1-weight)*gamma_2_plus;
 
@@ -363,6 +359,8 @@ int main(int argc, char **argv){
     decltype(v0) lambda_tilde_1;
     decltype(v0) beta_tilde_1;
     decltype(v0) I_1;
+    decltype(v0) J_1_without_e;
+    decltype(v0) pi_tilde_1;
     
     MatrixXd beta_fM = beta_f*dummyMat;
     
@@ -374,6 +372,8 @@ int main(int argc, char **argv){
       lambda_tilde_1.push_back(v0_dr_temp);
       beta_tilde_1.push_back(v0_dr_temp);
       I_1.push_back(v0_dr_temp);
+      J_1_without_e.push_back(v0_dr_temp);
+      pi_tilde_1.push_back(v0_dr_temp);
 }
 
    for(int k=0; k < Bcoeff.size(); k++){
@@ -387,24 +387,41 @@ int main(int argc, char **argv){
      MatrixXd term5 = (1.0/xi_p)*lambda_tilde_1[k].cwiseInverse();
      MatrixXd term6 = term5.cwiseProduct(b_1[k]);
      beta_tilde_1[k] = beta_fM - beta_fM.cwiseProduct(term4) - term6;
+     term1 = a_1[k] - 0.5*log(lambda)*xi_p*dummyMat;
+     term2 = 0.5*xi_p*lambda_tilde_1[k].array().log();
+     term3 = 0.5*lambda*pow(beta_f,2)*xi_p*dummyMat;
+     term4 = xi_p*beta_tilde_1[k].array().square();
+     term5 = 0.5 * lambda_tilde_1[k].cwiseProduct(term4);
+     I_1[k] = term1 + term2 + term3 - term5;
+     term1 = gamma_1*beta_tilde_1[k];
+     term2 = beta_tilde_1[k].array().square();
+     term3 =lambda_tilde_1[k].cwiseInverse();
+     term4 = term2 + term3;
+     term5 = gamma_2*F_mat[k].cwiseProduct(term4);
+     term6 = xi_d*(term1 + term5);
+     MatrixXd term7 = r_mat[k].array().exp();
+     J_1_without_e[k]=term6.cwiseProduct(term7);
+
+     term1 = (-1/xi_p)*I_1[k];
+     pi_tilde_1[k] = weight*term1.array().exp();
+     
    }
-
- 
-
-   cout << beta_tilde_1[4].row(11) << endl;
-
-    
-
-
-    
-	
-      
+ 	      
     dataGen *intData = new dataGen;
 
-    intData->F_mat= F_mat;
-    //cout << intData->F_mat[0].row(0) << endl;
-
-    //scale_2_fnc(intData);
+    intData->F_mat = F_mat;
+    intData->r_mat = r_mat;
+    intData->e_hat = e_hat;
+    intData->xi_p = xi_p;
+    intData->xi_d = xi_d;
+    intData->gamma_1 = gamma_1;
+    intData->gamma_2 = gamma_2;
+    intData->gamma_2_plus = gamma_2_plus;
+    intData->gamma_bar = gamma_bar;
+    intData->power = power;
+    intData->beta_f = beta_f;
+    intData->var_beta_f = var_beta_f;
+    scale_2_fnc(intData, 0.0);
      
       
     // const int n=4;
