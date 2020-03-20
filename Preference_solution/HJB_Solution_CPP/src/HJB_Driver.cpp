@@ -133,8 +133,8 @@ int main(int argc, char **argv){
     decltype(r_mat) k_mat;
     ndGrid(r, t, k, r_mat, F_mat, k_mat);
 
-    int quadrature=1;
-    int n=30;
+    const int quadrature=1;
+    const int n=30;
     float a = beta_f - 5.0 * sqrt(var_beta_f);
     float b = beta_f + 5.0 * sqrt(var_beta_f);
 
@@ -421,12 +421,11 @@ int main(int argc, char **argv){
     intData->power = power;
     intData->beta_f = beta_f;
     intData->var_beta_f = var_beta_f;
-    scale_2_fnc(intData, 0.0);
-     
+
+   vector <MatrixXd> scale_2 = quad_int(a,  b, n);     
       
     // const int n=4;
-    // VectorXd x(n), w(n); 
-    // quad_points_legendre(x, w, n);
+    
     
     return 0;
 

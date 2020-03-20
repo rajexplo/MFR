@@ -44,9 +44,11 @@ VectorXd csvread(char *filename);
 void quad_points_hermite(VectorXd &x, VectorXd &w, const int n);
 void quad_points_legendre(VectorXd &x, VectorXd &w, const int n);
 void ndGrid(VectorXd r, VectorXd t, VectorXd k, vector<MatrixXd> &r_mat, vector<MatrixXd> &F_mat, vector<MatrixXd> &k_mat);
-VectorXd normpdf(VectorXd &x, float mu, float sigma);
+float normpdf(float x, float mu, float sigma);
 MatrixXd compMatrix(MatrixXd &mat, float comFactor, float coeff);
 vector<MatrixXd> scale_2_fnc(dataGen* intData, const float x);
+vector<MatrixXd> quad_int(const float a, const float b, const int n);
+
 
 
 

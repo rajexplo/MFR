@@ -26,8 +26,6 @@ end
 dim = size(a, 2);
 sum = 0;
 if dim == 3
-        disp("I am looping 3")
-
     for i = 1:n
         for j = 1:n
             for k = 1:n
@@ -38,9 +36,6 @@ if dim == 3
 end
 
 if dim == 2
-        disp("I am looping 2")
-
-   disp("I am looping")
     for i = 1:n
         for j = 1:n
             sum = sum + (ws(i) * ws(j)) .* g([xs(i) xs(j)]);
@@ -49,7 +44,6 @@ if dim == 2
 end
 
 if dim == 1
-    disp("I am looping 1")
     for i = 1:n
         sum = sum + ws(i) .* g(xs(i));
     end

@@ -110,12 +110,11 @@ void ndGrid(VectorXd r, VectorXd t, VectorXd k, vector<MatrixXd> &r_mat, vector<
   k_mat=r_mat_w;
 }
 
-VectorXd normpdf(VectorXd &x, float mu, float sigma){
-  VectorXd y;
-  for (int i=0; i < x.size(); i++){
-    y(i)=exp(-0.5 *pow((1/sigma)*(x (i) - mu), 2) / (sqrt(2*M_PI) * sigma) );  
+float normpdf(float x, float mu, float sigma){
+  float y;
+    y=exp(-0.5 *pow((1/sigma)*(x - mu), 2) / (sqrt(2*M_PI) * sigma) );  
 
-  }
+  
   return y;
 }
 
@@ -146,19 +145,15 @@ vector<MatrixXd> scale_2_fnc(dataGen* intData, const float x){
     for(int k=0; k < f_out.size(); k++){
 
       MatrixXd term1 = intData->gamma_1*x*dummyMat + intData->gamma_2* pow(x, 2)*intData->F_mat[k];
-      MatrixXd term2 = x*intData->F_mat[k] -intData->gamma_bar*dummyMat;
-      MatrixXd term3 = intData->gamma_2_plus * term2.array().pow(intData->power-1);
+      MatrixXd term2 = x*intData->F_mat[k] - intData->gamma_bar*dummyMat;
+      MatrixXd term3 = intData->gamma_2_plus *x*term2.array().pow(intData->power-1);
       MatrixXd term4 = compMatrix(term2, 0.0, 1.0);
-
-  
-	
-      //exp(-1./xi_p.*xi_d.*(gamma_1.*x ...
-      // +gamma_2.*x.^2.*F_mat ...
-      // +gamma_2_plus.*x.*(x.*F_mat-gamma_bar).^(power-1).*((x.*F_mat-gamma_bar)>=0)).// *exp(r_mat).*e_hat) ...
-      //    .*normpdf(x,beta_f,sqrt(var_beta_f));
-
-
-    }
+      MatrixXd term5 = term4.cwiseProduct(term3);
+      MatrixXd term6 = intData->r_mat[k].array().exp();
+      MatrixXd term7 = term6.cwiseProduct(intData->e_hat[k]);
+      MatrixXd term8 = (-1/intData->xi_p)*intData->xi_d*term7.cwiseProduct(term1 + term3);
+      f_out[k] = normpdf(x, intData->beta_f, sqrt(intData->var_beta_f))*term8;
+}
     
 
     return f_out;
@@ -169,7 +164,11 @@ vector<MatrixXd> scale_2_fnc(dataGen* intData, const float x){
 
 vector<MatrixXd> quad_int(const float a, const float b, const int n){
 
-  vector <MatrixXd> scale_2;
+  vector<MatrixXd> scale_2;
+
+  VectorXd x(n), w(n); 
+  quad_points_legendre(x, w, n);
+  
   return scale_2;
 }
 
