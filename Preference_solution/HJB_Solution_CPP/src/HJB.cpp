@@ -133,9 +133,35 @@ MatrixXd compMatrix(MatrixXd &mat, float comFactor, float coeff){
   return matC;
 }
 
-void scale_2_fnc(dataGen* intData, const float x){
+vector<MatrixXd> scale_2_fnc(dataGen* intData, const float x){
     vector <MatrixXd> f_out;
-    cout << intData->F_mat[0].row(0) << endl;
+    MatrixXd v0_dt_temp(intData->r_mat[0].rows(), intData->r_mat[0].cols());
+    v0_dt_temp.fill(0.0);
+    MatrixXd dummyMat(intData->F_mat[0].rows(), intData->F_mat[0].cols());
+    dummyMat.fill(1.0);
+    for (int i=0; i < intData->F_mat.size(); i++){
+      f_out.push_back(v0_dt_temp);
+    }
+
+    for(int k=0; k < f_out.size(); k++){
+
+      MatrixXd term1 = intData->gamma_1*x*dummyMat + intData->gamma_2* pow(x, 2)*intData->F_mat[k];
+      MatrixXd term2 = x*intData->F_mat[k] -intData->gamma_bar*dummyMat;
+      MatrixXd term3 = intData->gamma_2_plus * term2.array().pow(intData->power-1);
+      MatrixXd term4 = compMatrix(term2, 0.0, 1.0);
+
+  
+	
+      //exp(-1./xi_p.*xi_d.*(gamma_1.*x ...
+      // +gamma_2.*x.^2.*F_mat ...
+      // +gamma_2_plus.*x.*(x.*F_mat-gamma_bar).^(power-1).*((x.*F_mat-gamma_bar)>=0)).// *exp(r_mat).*e_hat) ...
+      //    .*normpdf(x,beta_f,sqrt(var_beta_f));
+
+
+    }
+    
+
+    return f_out;
 }
 
 
