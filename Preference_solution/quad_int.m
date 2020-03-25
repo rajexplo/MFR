@@ -9,6 +9,8 @@ function result = quad_int(f, a, b, n, method)
 
 if strcmp(method,'legendre')==1
     [xs, ws] = quad_points_legendre(n);
+%     temp2=f((b - a) / 2 .* 0.1 + (a+b)/2);
+%     temp2(101,:,101)
     g = @(x) f((b - a) / 2 .* x + (a+b)/2);
     s = prod((b - a) ./ 2);
     
@@ -51,6 +53,9 @@ end
 if dim == 1
     disp("I am looping 1")
     for i = 1:n
+%         i
+%         temp=g(xs(i));
+%       temp(11,:,11)
         sum = sum + ws(i) .* g(xs(i));
     end
 end

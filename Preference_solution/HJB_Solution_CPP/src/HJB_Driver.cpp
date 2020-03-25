@@ -421,8 +421,16 @@ int main(int argc, char **argv){
     intData->power = power;
     intData->beta_f = beta_f;
     intData->var_beta_f = var_beta_f;
+    vector <MatrixXd> f_out;
+    // scale_2_fnc(intData, (b - a) / 2 *0.1 + (a+b)/2, f_out);
+    // for(auto k = 0 ; k < f_out.size(); k++){
+    //   cout << f_out[k] << endl;
+    // }
 
-   vector <MatrixXd> scale_2 = quad_int(a,  b, n);     
+      f_out= quad_int(intData, a,  b, n);
+
+       cout << "Print out data is" << f_out[10].row(10) << endl;
+
       
     // const int n=4;
     
