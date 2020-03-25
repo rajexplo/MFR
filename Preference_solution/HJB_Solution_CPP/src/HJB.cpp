@@ -161,7 +161,6 @@ vector<MatrixXd> scale_2_fnc(dataGen* intData, const float x){
 
 
 
-
 vector<MatrixXd> quad_int(const float a, const float b, const int n){
 
   vector<MatrixXd> scale_2;
