@@ -48,6 +48,8 @@ float normpdf(float x, float mu, float sigma);
 MatrixXd compMatrix(MatrixXd &mat, float comFactor, float coeff);
 vector<MatrixXd> scale_2_fnc(dataGen* intData, float x);
 vector<MatrixXd> quad_int(dataGen* intData, const float a, const float b, const int n);
+vector<MatrixXd> q2_tilde_fnc(dataGen* intData, vector<MatrixXd>& scale_2, float x);
+vector<MatrixXd> quad_int_J2(dataGen* intData, vector<MatrixXd> &scale_quad, const float a, const float b, const int n);
 
 
 

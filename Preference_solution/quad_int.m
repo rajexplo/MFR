@@ -53,9 +53,6 @@ end
 if dim == 1
     disp("I am looping 1")
     for i = 1:n
-%         i
-%         temp=g(xs(i));
-%       temp(11,:,11)
         sum = sum + ws(i) .* g(xs(i));
     end
 end

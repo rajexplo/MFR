@@ -160,8 +160,6 @@ c_1 = 2.*xi_d.*e_hat.*exp(r_mat).*F_mat.*gamma_2;
 lambda_tilde_1 = lambda+c_1./xi_p;
 beta_tilde_1 = beta_f-c_1./xi_p./lambda_tilde_1.*beta_f-1./xi_p./lambda_tilde_1.*b_1;
 
-% Start here
-
 I_1 = a_1-0.5.*log(lambda).*xi_p + 0.5.*log(lambda_tilde_1).*xi_p ...
     +0.5.*lambda.*beta_f.^2.*xi_p -0.5.*lambda_tilde_1.*(beta_tilde_1).^2.*xi_p;
 
@@ -169,16 +167,6 @@ J_1_without_e = xi_d.*(gamma_1.*beta_tilde_1 ...
     +gamma_2.*F_mat.*(beta_tilde_1.^2+1./lambda_tilde_1)).*exp(r_mat) ;
 
 pi_tilde_1 = weight.*exp(-1./xi_p.*I_1);
-
-% scale_2_fnc = @(x) exp(-1./xi_p.*xi_d.*(gamma_1.*x ...
-%     +gamma_2.*x.^2.*F_mat ...
-%     +gamma_2_plus.*x.*(x.*F_mat-gamma_bar).^(power-1).*((x.*F_mat-gamma_bar)>=0)).*exp(r_mat).*e_hat) ...
-%     .*normpdf(x,beta_f,sqrt(var_beta_f));
-
-% scale_2_fnc = @(x) exp(-1./xi_p.*xi_d.*(gamma_1.*x ...
-%     +gamma_2.*x.^2.*F_mat ...
-%     +gamma_2_plus.*x.*(x.*F_mat-gamma_bar).^(power-1).*((x.*F_mat-gamma_bar)>=0)).*exp(r_mat).*e_hat) ...
-%     .*normpdf(x,beta_f,sqrt(var_beta_f));
 
 scale_2_fnc = @(x) exp(-1./xi_p.*xi_d.*(gamma_1.*x ...
     +gamma_2.*x.^2.*F_mat ...
@@ -197,12 +185,13 @@ J_2_without_e_fnc = @(x) xi_d.*exp(r_mat).*...
     .*(gamma_1.*x +gamma_2.*F_mat.*x.^2 ...
     +gamma_2_plus.*x.*(x.*F_mat-gamma_bar).^(power-1).*((x.*F_mat-gamma_bar)>=0)) ...
     .*normpdf(x,beta_f,sqrt(var_beta_f));
+
 J_2_without_e = quad_int(J_2_without_e_fnc, [a], [b], n,'legendre'); % quadrature
 J_2_with_e = J_2_without_e.*e_hat;
 pi_tilde_2 = (1-weight).*exp(-1./xi_p.*I_2);
 pi_tilde_1_norm = pi_tilde_1./(pi_tilde_1+pi_tilde_2);
 pi_tilde_2_norm = 1-pi_tilde_1_norm;  
-    
+  
 expec_e_sum = (pi_tilde_1_norm.*(J_1_without_e) ...
     +pi_tilde_2_norm.*(J_2_without_e));
 B1 = v0_dr-v0_dt.*exp(r_mat)-expec_e_sum;  
@@ -217,7 +206,9 @@ R_1 = 1./xi_p.*(I_1 - J_1);
 R_2 = 1./xi_p.*(I_2 - J_2);
 drift_distort = (pi_tilde_1_norm.*J_1 ...
     +pi_tilde_2_norm.*J_2); 
-%%Tomorrow Traget
+
+
+%%%% Start Here
 
 if (weight == 0 || weight == 1)
     RE = pi_tilde_1_norm.*R_1 + pi_tilde_2_norm.*R_2;
@@ -265,6 +256,8 @@ pde_error = A.*v0+B_r.*v0_dr+B_t.*v0_dt+B_k.*v0_dk+C_rr.*v0_drr+C_kk.*v0_dkk+C_t
 rhs_err(iter) = max(max(max(abs(pde_error))));
 lhs_error = max(max(max(abs(out_comp - v1_initial))));
 lhs_err(iter) = lhs_error;
+% Stop Tmorrow's target
+
 
 while lhs_error > tol % check for convergence
    %tic

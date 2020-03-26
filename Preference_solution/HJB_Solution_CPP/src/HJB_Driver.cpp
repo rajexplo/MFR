@@ -361,6 +361,21 @@ int main(int argc, char **argv){
     decltype(v0) I_1;
     decltype(v0) J_1_without_e;
     decltype(v0) pi_tilde_1;
+    decltype(v0) I_2;
+    decltype(v0) J_2_with_e;
+    decltype(v0) pi_tilde_2;
+    decltype(v0) pi_tilde_1_norm;
+    decltype(v0) pi_tilde_2_norm;
+    decltype(v0) expec_e_sum;
+    decltype(v0) e_star;
+    decltype(v0) J_1;
+    decltype(v0) J_2;
+    decltype(v0) I_term;
+    decltype(v0) R_1;
+    decltype(v0) R_2;
+    decltype(v0) drift_distort;
+
+    
     
     MatrixXd beta_fM = beta_f*dummyMat;
     
@@ -374,6 +389,21 @@ int main(int argc, char **argv){
       I_1.push_back(v0_dr_temp);
       J_1_without_e.push_back(v0_dr_temp);
       pi_tilde_1.push_back(v0_dr_temp);
+      I_2.push_back(v0_dr_temp);
+      J_2_with_e.push_back(v0_dr_temp);
+      pi_tilde_2.push_back(v0_dr_temp);
+      pi_tilde_1_norm.push_back(v0_dr_temp);
+      pi_tilde_2_norm.push_back(v0_dr_temp);
+      expec_e_sum.push_back(v0_dr_temp);
+      B1.push_back(v0_dr_temp);
+      e.push_back(v0_dr_temp);
+      e_star.push_back(v0_dr_temp);
+      J_1.push_back(v0_dr_temp);
+      J_2.push_back(v0_dr_temp);
+      I_term.push_back(v0_dr_temp);
+      R_1.push_back(v0_dr_temp);
+      R_2.push_back(v0_dr_temp);
+      drift_distort.push_back(v0_dr_temp);
 }
 
    for(int k=0; k < Bcoeff.size(); k++){
@@ -421,18 +451,38 @@ int main(int argc, char **argv){
     intData->power = power;
     intData->beta_f = beta_f;
     intData->var_beta_f = var_beta_f;
-    vector <MatrixXd> f_out;
-    // scale_2_fnc(intData, (b - a) / 2 *0.1 + (a+b)/2, f_out);
-    // for(auto k = 0 ; k < f_out.size(); k++){
-    //   cout << f_out[k] << endl;
-    // }
+    vector <MatrixXd> scale_2;
+    scale_2= quad_int(intData, a,  b, n);
 
-      f_out= quad_int(intData, a,  b, n);
+    for (int k=0; k < I_2.size(); k++){
+      I_2[k]= -1 * xi_p *scale_2[k].array().log();
+      }
+    vector<MatrixXd> J_2_without_e = quad_int_J2(intData, scale_2, a, b, n);
+    for(int k=0; k < J_2_with_e.size(); k++){
+      J_2_with_e[k] = J_2_without_e[k].cwiseProduct(e_hat[k]);
+      pi_tilde_2[k] =(1-weight)*(-1/xi_p * I_2[k]).array().exp();
+      pi_tilde_1_norm[k] =pi_tilde_1[k].cwiseProduct((pi_tilde_1[k]+pi_tilde_2[k]).cwiseInverse());
+      pi_tilde_2_norm[k] = 1.0*dummyMat-pi_tilde_1_norm[k];
+      expec_e_sum[k] =  pi_tilde_1_norm[k].cwiseProduct(J_1_without_e[k]) + pi_tilde_2_norm[k].cwiseProduct(J_2_without_e[k]);
+      MatrixXd temp = r_mat[k].array().exp();
+      B1[k] = v0_dr[k]-v0_dt[k].cwiseProduct(temp)-expec_e_sum[k];  
+      C1 = -delta*kappa;
+      e[k] = -C1*B1[k].cwiseInverse(); 
+      e_star[k] = e[k];
+      J_1[k] = J_1_without_e[k].cwiseProduct(e_star[k]);
+      J_2[k] = J_2_without_e[k].cwiseProduct(e_star[k]);
+      I_term[k] = -1.0*xi_p*(pi_tilde_1[k]+pi_tilde_2[k]).array().log();
+      R_1[k] = 1.0/xi_p*(I_1[k] - J_1[k]);     
+      R_2[k] = 1.0/xi_p*(I_2[k] - J_2[k]);
+      drift_distort[k] = pi_tilde_1_norm[k].cwiseProduct(J_1[k]) + pi_tilde_2_norm[k].cwiseProduct(J_2[k]); 
+    }
 
-       cout << "Print out data is" << f_out[10].row(10) << endl;
+   cout << "Print  out data is" << drift_distort[10].row(10) << endl;
+
+
 
       
-    // const int n=4;
+    
     
     
     return 0;
