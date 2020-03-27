@@ -374,8 +374,16 @@ int main(int argc, char **argv){
     decltype(v0) R_1;
     decltype(v0) R_2;
     decltype(v0) drift_distort;
-
-    
+    decltype(v0) RE;
+    decltype(v0) RE_total;
+    decltype(v0) A;
+    decltype(v0) B_r;
+    decltype(v0) B_k;
+    decltype(v0) B_t;
+    decltype(v0) C_rr;
+    decltype(v0) C_kk;
+    decltype(v0) C_tt;
+    decltype(v0) D;
     
     MatrixXd beta_fM = beta_f*dummyMat;
     
@@ -404,6 +412,15 @@ int main(int argc, char **argv){
       R_1.push_back(v0_dr_temp);
       R_2.push_back(v0_dr_temp);
       drift_distort.push_back(v0_dr_temp);
+      RE.push_back(v0_dr_temp);
+      RE_total.push_back(v0_dr_temp);
+      B_r.push_back(v0_dr_temp);
+      B_k.push_back(v0_dr_temp);
+      B_t.push_back(v0_dr_temp);
+      C_rr.push_back(v0_dr_temp);
+      C_kk.push_back(v0_dr_temp);
+      C_tt.push_back(v0_dr_temp);
+      D.push_back(v0_dr_temp);
 }
 
    for(int k=0; k < Bcoeff.size(); k++){
@@ -477,14 +494,43 @@ int main(int argc, char **argv){
       drift_distort[k] = pi_tilde_1_norm[k].cwiseProduct(J_1[k]) + pi_tilde_2_norm[k].cwiseProduct(J_2[k]); 
     }
 
-   cout << "Print  out data is" << drift_distort[10].row(10) << endl;
+    if (weight==0 || weight==1){
+      for(int k=0; k < RE.size(); k++){
+	RE[k] = R_1[k].cwiseProduct(pi_tilde_1_norm[k]) + R_2[k].cwiseProduct(pi_tilde_2_norm[k]);
+	RE_total[k] = 1.0*xi_p*RE[k];
+      }
+    }else
+      {
+        for(int k=0; k < RE.size(); k++){
+         	MatrixXd temp1 = ((1/weight)*pi_tilde_1_norm[k]).array().log();
+		MatrixXd temp2 = ((1/(1-weight))*pi_tilde_2_norm[k]).array().log();
+		RE[k] =  pi_tilde_1_norm[k].cwiseProduct(R_1[k]) + pi_tilde_2_norm[k].cwiseProduct(R_2[k])
+			+ pi_tilde_1_norm[k].cwiseProduct(temp1) + pi_tilde_2_norm[k].cwiseProduct(temp2);
+		RE_total[k] = 1.0*xi_p*RE[k];
+	}
+      }
 
-
-
+    float coff = 0.5*(pow(sigma_k, 2));
+    for (int k=0; k < r_mat.size(); k++){
+         A.push_back(-delta*dummyMat);
+	 MatrixXd temp0 = psi_0*(jtemp[k].array().pow(psi_1));
+	 MatrixXd temp1 = (psi_1*(k_mat[k]-r_mat[k])).array().exp();
+	 MatrixXd temp2 = (dummyMat + phi_1*i_k[k]).array().log();
+         B_r[k] = -e_star[k] +temp1.cwiseProduct(temp0) -0.5*(pow(sigma_r,2))*dummyMat;
+	 B_k[k] =  mu_k*dummyMat + phi_0*(temp2) - coff*dummyMat ;
+	 temp0 = r_mat[k].array().exp();
+	 B_t[k] = e_star[k].cwiseProduct(temp0);
+	 C_rr[k] = 0.5* pow(sigma_r, 2)*dummyMat;
+         C_kk[k] = 0.5* pow(sigma_k, 2)*dummyMat;
+	 MatrixXd term0 = e_star[k].array().log();
+	 MatrixXd term1 = alpha*dummyMat - i_k[k] - jtemp[k];
+	 MatrixXd term2 = term1.array().log();
+	 D[k] =  delta*kappa*term0 + delta*kappa*r_mat[k] 
+	         + delta*(1-kappa)*(term2 + k_mat[k]) 
+                 + drift_distort[k] + RE_total[k];
+}
       
-    
-    
-    
+    cout << "Print  out data is" << D[10].row(10) << endl; 
     return 0;
 
 }
