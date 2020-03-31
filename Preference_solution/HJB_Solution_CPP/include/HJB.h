@@ -24,6 +24,7 @@ using Eigen::VectorXd;
 using Eigen::VectorXi;
 using Eigen::EigenSolver;
 using Eigen::MatrixXcd;
+using Eigen::Map;
 
 typedef struct foo{
   vector<MatrixXd> F_mat;
@@ -40,6 +41,18 @@ typedef struct foo{
   float var_beta_f;
   }dataGen;
 
+typedef struct foo1{
+  VectorXd A;
+  MatrixXd B;
+  MatrixXd C;
+  VectorXd D;
+  VectorXd v0;
+  float dt;
+}modelData;
+
+
+
+
 VectorXd csvread(char *filename);
 void quad_points_hermite(VectorXd &x, VectorXd &w, const int n);
 void quad_points_legendre(VectorXd &x, VectorXd &w, const int n);
@@ -50,6 +63,9 @@ vector<MatrixXd> scale_2_fnc(dataGen* intData, float x);
 vector<MatrixXd> quad_int(dataGen* intData, const float a, const float b, const int n);
 vector<MatrixXd> q2_tilde_fnc(dataGen* intData, vector<MatrixXd>& scale_2, float x);
 vector<MatrixXd> quad_int_J2(dataGen* intData, vector<MatrixXd> &scale_quad, const float a, const float b, const int n);
+
+VectorXd flatMat(vector <MatrixXd> &F_mat);
+void solveCG(MatrixXd &preLoadMat, modelData* model);
 
 
 

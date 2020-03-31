@@ -40,9 +40,6 @@ if dim == 3
 end
 
 if dim == 2
-        disp("I am looping 2")
-
-   disp("I am looping")
     for i = 1:n
         for j = 1:n
             sum = sum + (ws(i) * ws(j)) .* g([xs(i) xs(j)]);
@@ -51,7 +48,6 @@ if dim == 2
 end
 
 if dim == 1
-    disp("I am looping 1")
     for i = 1:n
         sum = sum + ws(i) .* g(xs(i));
     end

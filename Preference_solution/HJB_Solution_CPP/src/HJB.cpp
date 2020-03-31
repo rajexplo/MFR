@@ -281,6 +281,26 @@ vector<MatrixXd> quad_int_J2(dataGen* intData, vector<MatrixXd> &scale_quad, con
 
 }
 
+VectorXd flatMat(vector <MatrixXd> &F_mat){
+
+    int sz_yz = F_mat[0].rows()*F_mat[0].cols();
+    int sz_x =  F_mat.size();
+    MatrixXd stateSpace_r(sz_yz, sz_x);
+    
+    for (int k=0; k < F_mat.size(); k++){
+      VectorXd B(Map<VectorXd>(F_mat[k].data(), sz_yz));
+      stateSpace_r.col(k) = B;
+    }
+    
+    VectorXd B(Map<VectorXd>(stateSpace_r.data(), sz_yz*sz_x));
+
+    return B;
+
+}
+
+
+
+
 
 
  

@@ -191,7 +191,7 @@ J_2_with_e = J_2_without_e.*e_hat;
 pi_tilde_2 = (1-weight).*exp(-1./xi_p.*I_2);
 pi_tilde_1_norm = pi_tilde_1./(pi_tilde_1+pi_tilde_2);
 pi_tilde_2_norm = 1-pi_tilde_1_norm;  
-%%% End here   
+  
 expec_e_sum = (pi_tilde_1_norm.*(J_1_without_e) ...
     +pi_tilde_2_norm.*(J_2_without_e));
 B1 = v0_dr-v0_dt.*exp(r_mat)-expec_e_sum;  
@@ -206,7 +206,9 @@ R_1 = 1./xi_p.*(I_1 - J_1);
 R_2 = 1./xi_p.*(I_2 - J_2);
 drift_distort = (pi_tilde_1_norm.*J_1 ...
     +pi_tilde_2_norm.*J_2); 
-%%Tomorrow Traget
+
+
+%%%% Start Here
 
 if (weight == 0 || weight == 1)
     RE = pi_tilde_1_norm.*R_1 + pi_tilde_2_norm.*R_2;
@@ -239,7 +241,7 @@ model.D    = D(:);
 model.v0   = v0(:);
 model.dt   = dt;
 
-
+%%% Start Here
 out = solveCGNatural(stateSpace, model);
 out_comp = reshape(out,size(v0)).*ones(size(r_mat));
     
@@ -254,6 +256,9 @@ pde_error = A.*v0+B_r.*v0_dr+B_t.*v0_dt+B_k.*v0_dk+C_rr.*v0_drr+C_kk.*v0_dkk+C_t
 rhs_err(iter) = max(max(max(abs(pde_error))));
 lhs_error = max(max(max(abs(out_comp - v1_initial))));
 lhs_err(iter) = lhs_error;
+
+% Stop Tmorrow's target
+
 
 while lhs_error > tol % check for convergence
    %tic

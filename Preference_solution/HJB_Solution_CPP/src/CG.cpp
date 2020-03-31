@@ -1,56 +1,5 @@
-/* ****************** */
-/* Include packages   */
-/* ****************** */
-#include <math.h>
-#include <vector>
-#include <stdio.h>
-#include <stdlib.h>
-#include <fstream>
-#include <algorithm>
-#include <random>
-#include <chrono>
-
-//include Eigen
-#include "eigen3/Eigen/Dense"
-#include "eigen3/Eigen/Sparse"
-#include "eigen3/Eigen/SparseLU"
-#include "eigen3/Eigen/SparseQR"
-#include "eigen3/Eigen/SparseCholesky"
-#include "eigen3/Eigen/IterativeLinearSolvers"
-typedef Eigen::SparseMatrix<double > SpMat;
-typedef Eigen::Triplet<double> T;
-#include <typeinfo>
-#include "MarketIO.h"
-//include MEX related files
-#include "mex.h"
-#include "matrix.h"
-
-/* ******************** */
-/* State Variable Class */
-/* ******************** */
-
-using namespace std::chrono; 
-
-Eigen::MatrixXd empty;
-Eigen::ArrayXd emptyAry;
-class stateVars {
-    
-public:
-    Eigen::MatrixXd stateMat; //matrix to store state variables
-    Eigen::MatrixXd stateMatNorm; //matrix to store normalized state variables [-1,1]
-    Eigen::ArrayXd increVec; //vector to record steps
-    Eigen::ArrayXd dVec; //vector to record steps
-    int N; // num of dimensions
-    int S; // number of rows for the grid
-    Eigen::ArrayXd upperLims;
-    Eigen::ArrayXd lowerLims;
-    Eigen::ArrayXd gridSizes;
-
-    stateVars (Eigen::ArrayXd, Eigen::ArrayXd, Eigen::ArrayXd); //constructors with arrays of upper/lower bounds and gridsizes 
-    stateVars (Eigen::MatrixXd); //constructors by loading in data
-
-};
-
+#include "CG.h"
+#include "HJB.h"
 
 stateVars::stateVars (Eigen::ArrayXd upper, Eigen::ArrayXd lower, Eigen::ArrayXd gridSizes) {
     
@@ -139,35 +88,6 @@ struct elas {
     }
 };
 
-
-
-
-class linearSysVars {
-    
-public:
-    double dt;
-    int k;
-    Eigen::MatrixXd A; 
-    Eigen::MatrixXd B;
-    Eigen::MatrixXd C;
-    Eigen::MatrixXd D;
-
-    Eigen::ArrayXd atBoundIndicators;
-
-    std::vector<T> matList; 
-    SpMat Le;
-
-    //member functions
-    
-    //constructor
-    linearSysVars(stateVars & state_vars, Eigen::MatrixXd A, Eigen::MatrixXd B, Eigen::MatrixXd C, Eigen::MatrixXd D, double dt);
-    
-    //function to construt matrix
-    
-    void constructMat(stateVars & state_vars);
-    
-};
-
 linearSysVars::linearSysVars(stateVars & state_vars, Eigen::MatrixXd AInput, Eigen::MatrixXd BInput, Eigen::MatrixXd CInput, Eigen::MatrixXd DInput, double dtInput) {
         
     Le.resize(state_vars.S,state_vars.S);
@@ -175,10 +95,7 @@ linearSysVars::linearSysVars(stateVars & state_vars, Eigen::MatrixXd AInput, Eig
     C.resize(state_vars.S,state_vars.N); D.resize(state_vars.S,1);
     A = AInput; B = BInput; C = CInput; D = DInput;
     dt = dtInput;
-
 }
-
-
 
 void linearSysVars::constructMat(stateVars & state_vars) {
     matList.clear();
@@ -192,8 +109,7 @@ void linearSysVars::constructMat(stateVars & state_vars) {
         
         atBound = -1;
         //check boundaries
-        
-        matList.push_back(T(i,i, (1.0 - dt * A(i,0))  ));
+	matList.push_back(T(i,i, (1.0 - dt * A(i,0))  ));
         
         for (int n = (state_vars.N - 1); n >=0; --n ) {
             atBoundIndicators(n) = -1.0;
@@ -206,12 +122,10 @@ void linearSysVars::constructMat(stateVars & state_vars) {
                 atBound = 1.0;
                 upperBound = 1.0;
                 /* Uncomment this section if you want natural boundaries */
-                
-                 matList.push_back(T(i, i, - dt * ( firstCoefE/state_vars.dVec(n) + secondCoefE / pow(state_vars.dVec(n), 2) ) ) );
+		matList.push_back(T(i, i, - dt * ( firstCoefE/state_vars.dVec(n) + secondCoefE / pow(state_vars.dVec(n), 2) ) ) );
                  matList.push_back(T(i, i - state_vars.increVec(n), - dt * ( - firstCoefE/state_vars.dVec(n) - 2 * secondCoefE / pow(state_vars.dVec(n), 2) ) ));
                  matList.push_back(T(i, i - 2*state_vars.increVec(n), - dt * ( secondCoefE / pow(state_vars.dVec(n), 2) ) ) );
-                
-                /* Uncomment this section if you want first derivatives = constant  */
+		  /* Uncomment this section if you want first derivatives = constant  */
 //                 matList.push_back(T(i,i, - (1.0 - dt * A(i,0) ) ));
                 /*
                  matList.push_back(T(i, i, - dt * ( 1.0/state_vars.dVec(n)  ) ) );
@@ -229,7 +143,8 @@ void linearSysVars::constructMat(stateVars & state_vars) {
                 matList.push_back(T(i, i - 2*state_vars.increVec(n), - dt * ( secondCoefE / pow(state_vars.dVec(n), 2) ) ) );
                 */
                 /*
-                matList.push_back(T(i, i, - dt * (  1.0 / pow(state_vars.dVec(n), 2) ) ) );
+
+matList.push_back(T(i, i, - dt * (  1.0 / pow(state_vars.dVec(n), 2) ) ) );
                 matList.push_back(T(i, i - state_vars.increVec(n), - dt * ( - 2 *  1.0 / pow(state_vars.dVec(n), 2) ) ));
                 matList.push_back(T(i, i - 2*state_vars.increVec(n), - dt * ( 1.0 / pow(state_vars.dVec(n), 2) ) ) );
                 */
@@ -240,11 +155,10 @@ void linearSysVars::constructMat(stateVars & state_vars) {
 
                 ///* Uncomment this section if you want natural boundaries
 
-                 matList.push_back(T(i, i, - dt * ( - firstCoefE/state_vars.dVec(n) + secondCoefE / pow(state_vars.dVec(n), 2) ) ) );
+		matList.push_back(T(i, i, - dt * ( - firstCoefE/state_vars.dVec(n) + secondCoefE / pow(state_vars.dVec(n), 2) ) ) );
                  matList.push_back(T(i, i + state_vars.increVec(n), - dt * ( firstCoefE/state_vars.dVec(n) - 2 * secondCoefE / pow(state_vars.dVec(n), 2) ) ));
                  matList.push_back(T(i, i + 2*state_vars.increVec(n), - dt * ( secondCoefE / pow(state_vars.dVec(n), 2) ) ) );
-
-                //*/
+		 //*/
                 /* Uncomment this section if you want first derivatives = constant
                  */
 //                 matList.push_back(T(i,i, - (1.0 - dt * A(i,0) ) ));
@@ -260,7 +174,7 @@ void linearSysVars::constructMat(stateVars & state_vars) {
                 /*
                 matList.push_back(T(i, i, - dt * ( secondCoefE / pow(state_vars.dVec(n), 2) ) ) );
                 matList.push_back(T(i, i + state_vars.increVec(n), - dt * (  - 2 * secondCoefE / pow(state_vars.dVec(n), 2) ) ));
-                matList.push_back(T(i, i + 2*state_vars.increVec(n), - dt * ( secondCoefE / pow(state_vars.dVec(n), 2) ) ) );
+matList.push_back(T(i, i + 2*state_vars.increVec(n), - dt * ( secondCoefE / pow(state_vars.dVec(n), 2) ) ) );
                 */
                 /*
                     matList.push_back(T(i, i, - dt * ( 1.0 / pow(state_vars.dVec(n), 2) ) ) );
@@ -274,8 +188,8 @@ void linearSysVars::constructMat(stateVars & state_vars) {
 
 
         }
-         
-        if (atBound < 0 ) {
+
+	 if (atBound < 0 ) {
           // matList.push_back(T(i,i, (1.0 - dt * A(i,0))  ));
         }
         for (int n = (state_vars.N - 1); n >= 0; --n) {
@@ -294,8 +208,7 @@ void linearSysVars::constructMat(stateVars & state_vars) {
                     matList.push_back(T(i, i + state_vars.increVec(n), - dt * secondCoefE / ( pow(state_vars.dVec(n), 2) ) ));
                     matList.push_back(T(i, i - state_vars.increVec(n), - dt * secondCoefE / ( pow(state_vars.dVec(n), 2) ) ));
             }
-
-        }
+	     }
 
 
     }
@@ -310,134 +223,22 @@ void linearSysVars::constructMat(stateVars & state_vars) {
 }
 
 
-void
-mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-{
-    int        i;
+void solveCG(MatrixXd &preLoadMat, modelData* model){
 
-    
-    /* Translating state space inputs into C++ EIGEN */
-    
-    /* Create state space */
-
-    int nRows = mxGetM(prhs[0]); int nCols = mxGetN(prhs[0]);
-    
-    Eigen::Map<Eigen::MatrixXd> preLoadMat((double *)mxGetPr(prhs[0]), nRows, nCols);
-
-    
-    stateVars stateSpace(preLoadMat);
-
-    mexPrintf("ROWS: %3i% and COLS: %3i%\n",  preLoadMat.rows(), preLoadMat.cols());
-    mexEvalString("drawnow;");
+  stateVars stateSpace(preLoadMat);
 
 
-    /* Load matrix coefficients */
-    mxArray *mxValue; 
-    mxValue = mxGetField(prhs[1], 0, "A");
-    nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
-    Eigen::Map<Eigen::MatrixXd> A((double *)mxGetPr(mxValue),nRows,nCols);
 
-    
-    mxValue = mxGetField(prhs[1], 0, "B");      
-    nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
-    Eigen::Map<Eigen::MatrixXd> B((double *)mxGetPr(mxValue),nRows,nCols);
-    
-    mxValue = mxGetField(prhs[1], 0, "C");      
-    nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
-    Eigen::Map<Eigen::MatrixXd> C((double *)mxGetPr(mxValue),nRows,nCols);
-    
-    mxValue = mxGetField(prhs[1], 0, "D");      
-    nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
-    Eigen::Map<Eigen::MatrixXd> D((double *)mxGetPr(mxValue),nRows,nCols);
-
-    mxValue = mxGetField(prhs[1], 0, "v0");      
-    nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
-    Eigen::Map<Eigen::MatrixXd> v0((double *)mxGetPr(mxValue),nRows,nCols);
-
-    /* Construct linear system */
-    mxValue = mxGetField(prhs[1], 0, "dt"); 
-    double dt = mxGetPr(mxValue)[0];  //Load in dt;
-    //saveMarket(dt,"Le_local_dt.dat");
-    linearSysVars linearSys_vars(stateSpace, A,B,C,D,dt);
-    
-    linearSys_vars.constructMat(stateSpace);
-    
-    Eigen::VectorXd v1; 
-    v1.resize(stateSpace.S, stateSpace.N); 
-    v1 = v0; // smart guess
-    v0 = v0.array() + dt * D.array(); // transform v0 into rhs
-    saveMarket(v0,"rhs.dat");
-    saveMarket(v1,"v1.dat");
-
-    /*********************************************/
-    /* Change RHS to reflect boundary conditions */
-    /*********************************************/
-
-    //construct matrix
-    /* uncomment this section if you want to set the boundary conditions to a constant */
-    for (int i = 0; i < stateSpace.S; ++i) {
-
-        for (int n = (stateSpace.N - 1); n >=0; --n ) {
-            
-            //check whether it's at upper or lower boundary
-            if ( std::abs(stateSpace.stateMat(i,n) - stateSpace.upperLims(n)) < stateSpace.dVec(n)/2 ) {  //upper boundary
-             //   v0(i) = 0.0001;
-            } else if ( std::abs( stateSpace.stateMat(i,n) - stateSpace.lowerLims(n)) < stateSpace.dVec(n)/2 ) { //lower boundary
-             //v0(i) = 0.0001;            
-            }
-        }
-    }
-     
-    /***************************************/
-    /* Solve the system and send to MATLAB */  
-    /***************************************/
-    
-    /* Initialize Eigen's cg solver */
-    
-    Eigen::VectorXd XiEVector;
-    auto start = high_resolution_clock::now();
-    Eigen::LeastSquaresConjugateGradient<SpMat > cgE;
-    //Eigen::BiCGSTAB<SpMat > cgE;
-    cgE.setMaxIterations(10000);
-    cgE.setTolerance( 0.0000000001 );
-    cgE.compute(linearSys_vars.Le);
-    mexPrintf("Rows: %3i% \n",linearSys_vars.Le.rows());
-    mexPrintf("Cols: %3i% \n",linearSys_vars.Le.cols());
-    XiEVector = cgE.solveWithGuess(v0,v1);
-    auto stop = high_resolutuion_clock::now();
-    auto duration = duration_cast<microseconds> (stop-start);
-    mexPrintf("CONJUGATE GRADIENT TOOK (number of iterations): %3i% \n",  cgE.iterations() );
-    mexPrintf("CONJUGATE GRADIENT error: %3f% \n",  cgE.error() );
-    mexPrintf("Time take by CG Solver: %3f% microseconds \n", duration.count());
-    mexPrintf("ROWS: %3i% and COLS: %3i%\n",  preLoadMat.rows(), preLoadMat.cols());
-    mexEvalString("drawnow;");
-    v1 = XiEVector;
-    
-    /* Try to use LU decomp*/
-    /*
-    Eigen::SparseLU<SpMat > solver; 
-    solver.analyzePattern(linearSys_vars.Le);
-    solver.factorize(linearSys_vars.Le);
-    v1 = solver.solve(v0);
-    */
-    /* Send solution to MATLAB */
-    
-    mwSize rows = stateSpace.S;
-    mwSize cols = 1;
-    
-    //mexPrintf("Conjugate gradient took iterations:%3i%\n", cgE.iterations());
-
-    plhs[0] = mxCreateDoubleMatrix(rows, cols, mxREAL); // Create MATLAB array of same size
-    Eigen::Map<Eigen::MatrixXd> map(mxGetPr(plhs[0]), rows, cols); // Map the array
-    map = v1;
-    
-//     plhs[1] = mxCreateDoubleMatrix(1, 1, mxREAL); // Create MATLAB array of same size
-//     Eigen::Map<Eigen::MatrixXd> map1(mxGetPr(plhs[1]), 1, 1); // Map the array
-//     map1 = cgE.iterations();
-//     
-//     plhs[2] = mxCreateDoubleMatrix(1, 1, mxREAL); // Create MATLAB array of same size
-//     Eigen::Map<Eigen::MatrixXd> map2(mxGetPr(plhs[2]), 1, 1); // Map the array
-//     map2 = cgE.error();
-//     
 }
+         
+
+               
+
+
+
+
+
+
+
+
 

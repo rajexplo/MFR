@@ -26,6 +26,7 @@ LIBS =
 # list of objects to be compiled
 OBJS    = \
         src/HJB.o\
+        src/CG.o\
         src/HJB_Driver.o
 
 HJBSolver:$(OBJS)

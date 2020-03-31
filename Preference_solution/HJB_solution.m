@@ -241,7 +241,7 @@ model.D    = D(:);
 model.v0   = v0(:);
 model.dt   = dt;
 
-
+%%% Start Here
 out = solveCGNatural(stateSpace, model);
 out_comp = reshape(out,size(v0)).*ones(size(r_mat));
     
@@ -256,6 +256,7 @@ pde_error = A.*v0+B_r.*v0_dr+B_t.*v0_dt+B_k.*v0_dk+C_rr.*v0_drr+C_kk.*v0_dkk+C_t
 rhs_err(iter) = max(max(max(abs(pde_error))));
 lhs_error = max(max(max(abs(out_comp - v1_initial))));
 lhs_err(iter) = lhs_error;
+
 % Stop Tmorrow's target
 
 

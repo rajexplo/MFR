@@ -1,5 +1,6 @@
 #include<iostream>
 #include "HJB.h"
+#include "CG.h"
 
 
 
@@ -530,7 +531,52 @@ int main(int argc, char **argv){
                  + drift_distort[k] + RE_total[k];
 }
       
-    cout << "Print  out data is" << D[10].row(10) << endl; 
+
+    int sz=r_mat.size()*r_mat[0].rows()*r_mat[0].cols();
+    MatrixXd stateSpace(sz, 3);
+    MatrixXd Bf(sz,3);
+    MatrixXd Cf(sz,3);
+    VectorXd rf = flatMat(r_mat);
+    VectorXd Ff = flatMat(F_mat);
+    VectorXd kf = flatMat(k_mat);
+
+    VectorXd Af = flatMat(A);
+    VectorXd B_rf = flatMat(B_r);
+    VectorXd B_tf = flatMat(B_t);
+    VectorXd B_kf = flatMat(B_k);
+
+    VectorXd C_rrf = flatMat(C_rr);
+    VectorXd C_ttf = flatMat(C_tt);
+    VectorXd C_kkf = flatMat(C_kk);
+    VectorXd D_f = flatMat(D);
+    VectorXd v_0f = flatMat(v0);
+
+    
+    stateSpace.col(0) =rf;
+    stateSpace.col(1) =Ff;
+    stateSpace.col(2) =kf;
+
+    Bf.col(0) =B_rf;
+    Bf.col(1) =B_tf;
+    Bf.col(2) =B_kf;
+
+    Cf.col(0) =C_rrf;
+    Cf.col(1) =C_ttf;
+    Cf.col(2) =C_kkf;
+    
+    
+    modelData* model = new modelData;
+    model->A = Af;
+    model->B = Bf;
+    model->C=Cf;
+    model->D = D_f;
+    model->v0 = v_0f;
+    model->dt = dt;
+
+    solveCG(stateSpace, model);
+     
+    
+    cout << "Row is " << stateSpace.rows() << " Col is "<< stateSpace.cols() << endl;
     return 0;
 
 }
