@@ -322,6 +322,10 @@ mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     int nRows = mxGetM(prhs[0]); int nCols = mxGetN(prhs[0]);
     Eigen::Map<Eigen::MatrixXd> preLoadMat((double *)mxGetPr(prhs[0]),nRows,nCols);
+    mexPrintf("Preload Rows : %3i% and Cols: %3i% \n",  nRows, nCols);
+   
+    mexEvalString("drawnow;");
+    
     
     stateVars stateSpace(preLoadMat);    
 
@@ -331,11 +335,17 @@ mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxValue = mxGetField(prhs[1], 0, "A");
     nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
     Eigen::Map<Eigen::MatrixXd> A((double *)mxGetPr(mxValue),nRows,nCols);
+    
+   
 
     
     mxValue = mxGetField(prhs[1], 0, "B");      
     nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
     Eigen::Map<Eigen::MatrixXd> B((double *)mxGetPr(mxValue),nRows,nCols);
+    mexPrintf("B Rows : %3i% \n",  A.rows());
+    mexPrintf("B Cols : %3i% \n",  A.cols());
+    mexEvalString("drawnow;");
+
     
     mxValue = mxGetField(prhs[1], 0, "C");      
     nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
@@ -357,12 +367,17 @@ mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     linearSys_vars.constructMat(stateSpace);
     
-    Eigen::VectorXd v1; 
-    v1.resize(stateSpace.S, stateSpace.N); 
+    Eigen::VectorXd v1;
+    v1.resize(stateSpace.S, stateSpace.N);
+    mexPrintf("S Rows : %3i% \n",  stateSpace.S);
+    mexPrintf("N Cols : %3i% \n",  stateSpace.N);
+    mexEvalString("drawnow;");
+
+    
     v1 = v0; // smart guess
     v0 = v0.array() + dt * D.array(); // transform v0 into rhs
-    saveMarket(v0,"rhs.dat");
-    saveMarket(v1,"v1.dat");
+    //saveMarket(v0,"rhs.dat");
+    //saveMarket(v1,"v1.dat");
 
     /*********************************************/
     /* Change RHS to reflect boundary conditions */
@@ -390,7 +405,7 @@ mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* Initialize Eigen's cg solver */
     
     Eigen::VectorXd XiEVector;
-    saveMarket(linearSys_vars.Le,"System.dat");
+    //saveMarket(linearSys_vars.Le,"System.dat");
  
     auto start = high_resolution_clock::now();
     Eigen::LeastSquaresConjugateGradient<SpMat > cgE;
@@ -434,6 +449,7 @@ mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //     plhs[2] = mxCreateDoubleMatrix(1, 1, mxREAL); // Create MATLAB array of same size
 //     Eigen::Map<Eigen::MatrixXd> map2(mxGetPr(plhs[2]), 1, 1); // Map the array
 //     map2 = cgE.error();
-//     
+//   
+    
 }
 

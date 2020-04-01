@@ -1,4 +1,5 @@
 #include<iostream>
+#include <bits/stdc++.h>
 #include "HJB.h"
 #include "CG.h"
 
@@ -16,6 +17,7 @@ using namespace std;
  */
 
 int main(int argc, char **argv){
+  Eigen::initParallel();
     
     int ambiguity = 1;	
     int damage_level=1;
@@ -146,7 +148,7 @@ int main(int argc, char **argv){
     vector<MatrixXd> v0;
 
     for (int i=0; i < r_mat.size(); i++){
-      v0.push_back(kappa*r_mat[i] + (1-kappa)*k_mat[i] -beta_f * F_mat[i]);
+      v0.push_back(kappa*r_mat[i] + (1-kappa)*k_mat[i] - beta_f * F_mat[i]);
     }
 
     decltype(v0) v1_initial;
@@ -221,7 +223,8 @@ int main(int argc, char **argv){
       v0_dk[k] = (1/(2*hk))*(v0[k+1]-v0[k-1]);
       j=k;
     }
-    v0_dk[j] = (1/hk)*(v0[j]-v0[j-1]);
+
+    v0_dk[j+1] = (1/hk)*(v0[j+1]-v0[j]);
     v0_dk[0] = (1/hk)*(v0[1]-v0[0]);
     
     
@@ -325,7 +328,7 @@ int main(int argc, char **argv){
      float Ccoeff = -alpha - 1./phi_1;
     for(int k=0; k < Bcoeff.size(); k++){
       MatrixXd term1 = delta *(1-kappa)*phi_1*dummyMat + phi_0*phi_1* v0_dk[k];
-      MatrixXd term2 = (1/(psi_0*0.5))*delta*(1-kappa)*v0_dr[k].cwiseInverse();
+      MatrixXd term2 = (1/(psi_0*0.5))*delta*(1-kappa)*(v0_dr[k].cwiseInverse());
       MatrixXd term3 = 0.5*(r_mat[k] - k_mat[k]);
       MatrixXd term4 = term3.array().exp();
       float denom = 1/(delta*(1-kappa)*phi_1);
@@ -517,7 +520,7 @@ int main(int argc, char **argv){
 	 MatrixXd temp0 = psi_0*(jtemp[k].array().pow(psi_1));
 	 MatrixXd temp1 = (psi_1*(k_mat[k]-r_mat[k])).array().exp();
 	 MatrixXd temp2 = (dummyMat + phi_1*i_k[k]).array().log();
-         B_r[k] = -e_star[k] +temp1.cwiseProduct(temp0) -0.5*(pow(sigma_r,2))*dummyMat;
+         B_r[k] = -e_star[k] + temp1.cwiseProduct(temp0) -0.5*(pow(sigma_r,2))*dummyMat;
 	 B_k[k] =  mu_k*dummyMat + phi_0*(temp2) - coff*dummyMat ;
 	 temp0 = r_mat[k].array().exp();
 	 B_t[k] = e_star[k].cwiseProduct(temp0);
@@ -541,6 +544,7 @@ int main(int argc, char **argv){
     VectorXd kf = flatMat(k_mat);
 
     VectorXd Af = flatMat(A);
+    MatrixXd Aftemp(Map<MatrixXd>(Af.data(), Af.rows(), Af.cols()));
     VectorXd B_rf = flatMat(B_r);
     VectorXd B_tf = flatMat(B_t);
     VectorXd B_kf = flatMat(B_k);
@@ -549,7 +553,10 @@ int main(int argc, char **argv){
     VectorXd C_ttf = flatMat(C_tt);
     VectorXd C_kkf = flatMat(C_kk);
     VectorXd D_f = flatMat(D);
+    MatrixXd Dftemp(Map<MatrixXd>(D_f.data(), D_f.rows(), D_f.cols()));
     VectorXd v_0f = flatMat(v0);
+    MatrixXd v_0ftemp(Map<MatrixXd>(v_0f.data(), v_0f.rows(), v_0f.cols()));
+
 
     
     stateSpace.col(0) =rf;
@@ -566,17 +573,31 @@ int main(int argc, char **argv){
     
     
     modelData* model = new modelData;
-    model->A = Af;
+    model->A = Aftemp;
     model->B = Bf;
     model->C=Cf;
-    model->D = D_f;
-    model->v0 = v_0f;
+    model->D = Dftemp;
+    model->v0 = v_0ftemp;
     model->dt = dt;
-
-    solveCG(stateSpace, model);
-     
     
-    cout << "Row is " << stateSpace.rows() << " Col is "<< stateSpace.cols() << endl;
+    int nth = Eigen::nbThreads( );
+    cout << "Number of Threads: " << nth << endl;
+
+    time_t start, end;
+
+    time(&start);
+    ios_base::sync_with_stdio(false);
+    VectorXd v1 = solveCG(stateSpace, model);
+    time(&end);
+    double time_taken = double(end - start); 
+    cout << "Time taken by program is : " << fixed << time_taken << setprecision(5); 
+    cout << " sec " << endl;
+
+
+    //cout << "v1 is: " << v1 << endl;
+
+    
+    
     return 0;
 
 }

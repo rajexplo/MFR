@@ -331,113 +331,114 @@ mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mexEvalString("drawnow;");
 
 
-    /* Load matrix coefficients */
-    mxArray *mxValue; 
-    mxValue = mxGetField(prhs[1], 0, "A");
-    nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
-    Eigen::Map<Eigen::MatrixXd> A((double *)mxGetPr(mxValue),nRows,nCols);
+   //  /* Load matrix coefficients */
+//     mxArray *mxValue; 
+//     mxValue = mxGetField(prhs[1], 0, "A");
+//     nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
+//     Eigen::Map<Eigen::MatrixXd> A((double *)mxGetPr(mxValue),nRows,nCols);
 
     
-    mxValue = mxGetField(prhs[1], 0, "B");      
-    nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
-    Eigen::Map<Eigen::MatrixXd> B((double *)mxGetPr(mxValue),nRows,nCols);
+//     mxValue = mxGetField(prhs[1], 0, "B");      
+//     nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
+//     Eigen::Map<Eigen::MatrixXd> B((double *)mxGetPr(mxValue),nRows,nCols);
     
-    mxValue = mxGetField(prhs[1], 0, "C");      
-    nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
-    Eigen::Map<Eigen::MatrixXd> C((double *)mxGetPr(mxValue),nRows,nCols);
+//     mxValue = mxGetField(prhs[1], 0, "C");      
+//     nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
+//     Eigen::Map<Eigen::MatrixXd> C((double *)mxGetPr(mxValue),nRows,nCols);
     
-    mxValue = mxGetField(prhs[1], 0, "D");      
-    nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
-    Eigen::Map<Eigen::MatrixXd> D((double *)mxGetPr(mxValue),nRows,nCols);
+//     mxValue = mxGetField(prhs[1], 0, "D");      
+//     nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
+//     Eigen::Map<Eigen::MatrixXd> D((double *)mxGetPr(mxValue),nRows,nCols);
 
-    mxValue = mxGetField(prhs[1], 0, "v0");      
-    nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
-    Eigen::Map<Eigen::MatrixXd> v0((double *)mxGetPr(mxValue),nRows,nCols);
+//     mxValue = mxGetField(prhs[1], 0, "v0");      
+//     nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
+//     Eigen::Map<Eigen::MatrixXd> v0((double *)mxGetPr(mxValue),nRows,nCols);
 
-    /* Construct linear system */
-    mxValue = mxGetField(prhs[1], 0, "dt"); 
-    double dt = mxGetPr(mxValue)[0];  //Load in dt;
-    //saveMarket(dt,"Le_local_dt.dat");
-    linearSysVars linearSys_vars(stateSpace, A,B,C,D,dt);
+//     /* Construct linear system */
+//     mxValue = mxGetField(prhs[1], 0, "dt"); 
+//     double dt = mxGetPr(mxValue)[0];  //Load in dt;
+//     //saveMarket(dt,"Le_local_dt.dat");
+//     linearSysVars linearSys_vars(stateSpace, A,B,C,D,dt);
     
-    linearSys_vars.constructMat(stateSpace);
+//     linearSys_vars.constructMat(stateSpace);
     
-    Eigen::VectorXd v1; 
-    v1.resize(stateSpace.S, stateSpace.N); 
-    v1 = v0; // smart guess
-    v0 = v0.array() + dt * D.array(); // transform v0 into rhs
-    saveMarket(v0,"rhs.dat");
-    saveMarket(v1,"v1.dat");
+//     Eigen::VectorXd v1; 
+//     v1.resize(stateSpace.S, stateSpace.N); 
+//     v1 = v0; // smart guess
+//     v0 = v0.array() + dt * D.array(); // transform v0 into rhs
+//     saveMarket(v0,"rhs.dat");
+//     saveMarket(v1,"v1.dat");
 
-    /*********************************************/
-    /* Change RHS to reflect boundary conditions */
-    /*********************************************/
+//     /*********************************************/
+//     /* Change RHS to reflect boundary conditions */
+//     /*********************************************/
 
-    //construct matrix
-    /* uncomment this section if you want to set the boundary conditions to a constant */
-    for (int i = 0; i < stateSpace.S; ++i) {
+//     //construct matrix
+//     /* uncomment this section if you want to set the boundary conditions to a constant */
+//     for (int i = 0; i < stateSpace.S; ++i) {
 
-        for (int n = (stateSpace.N - 1); n >=0; --n ) {
+//         for (int n = (stateSpace.N - 1); n >=0; --n ) {
             
-            //check whether it's at upper or lower boundary
-            if ( std::abs(stateSpace.stateMat(i,n) - stateSpace.upperLims(n)) < stateSpace.dVec(n)/2 ) {  //upper boundary
-             //   v0(i) = 0.0001;
-            } else if ( std::abs( stateSpace.stateMat(i,n) - stateSpace.lowerLims(n)) < stateSpace.dVec(n)/2 ) { //lower boundary
-             //v0(i) = 0.0001;            
-            }
-        }
-    }
+//             //check whether it's at upper or lower boundary
+//             if ( std::abs(stateSpace.stateMat(i,n) - stateSpace.upperLims(n)) < stateSpace.dVec(n)/2 ) {  //upper boundary
+//              //   v0(i) = 0.0001;
+//             } else if ( std::abs( stateSpace.stateMat(i,n) - stateSpace.lowerLims(n)) < stateSpace.dVec(n)/2 ) { //lower boundary
+//              //v0(i) = 0.0001;            
+//             }
+//         }
+//     }
      
-    /***************************************/
-    /* Solve the system and send to MATLAB */  
-    /***************************************/
+//     /***************************************/
+//     /* Solve the system and send to MATLAB */  
+//     /***************************************/
     
-    /* Initialize Eigen's cg solver */
+//     /* Initialize Eigen's cg solver */
     
-    Eigen::VectorXd XiEVector;
-    auto start = high_resolution_clock::now();
-    Eigen::LeastSquaresConjugateGradient<SpMat > cgE;
-    //Eigen::BiCGSTAB<SpMat > cgE;
-    cgE.setMaxIterations(10000);
-    cgE.setTolerance( 0.0000000001 );
-    cgE.compute(linearSys_vars.Le);
-    mexPrintf("Rows: %3i% \n",linearSys_vars.Le.rows());
-    mexPrintf("Cols: %3i% \n",linearSys_vars.Le.cols());
-    XiEVector = cgE.solveWithGuess(v0,v1);
-    auto stop = high_resolutuion_clock::now();
-    auto duration = duration_cast<microseconds> (stop-start);
-    mexPrintf("CONJUGATE GRADIENT TOOK (number of iterations): %3i% \n",  cgE.iterations() );
-    mexPrintf("CONJUGATE GRADIENT error: %3f% \n",  cgE.error() );
-    mexPrintf("Time take by CG Solver: %3f% microseconds \n", duration.count());
-    mexPrintf("ROWS: %3i% and COLS: %3i%\n",  preLoadMat.rows(), preLoadMat.cols());
-    mexEvalString("drawnow;");
-    v1 = XiEVector;
+//     Eigen::VectorXd XiEVector;
+//     auto start = high_resolution_clock::now();
+//     Eigen::LeastSquaresConjugateGradient<SpMat > cgE;
+//     //Eigen::BiCGSTAB<SpMat > cgE;
+//     cgE.setMaxIterations(10000);
+//     cgE.setTolerance( 0.0000000001 );
+//     cgE.compute(linearSys_vars.Le);
     
-    /* Try to use LU decomp*/
-    /*
-    Eigen::SparseLU<SpMat > solver; 
-    solver.analyzePattern(linearSys_vars.Le);
-    solver.factorize(linearSys_vars.Le);
-    v1 = solver.solve(v0);
-    */
-    /* Send solution to MATLAB */
+//     XiEVector = cgE.solveWithGuess(v0,v1);
+//     auto stop = high_resolutuion_clock::now();
+//     auto duration = duration_cast<microseconds> (stop-start);
+//     mexPrintf("CONJUGATE GRADIENT TOOK (number of iterations): %3i% \n",  cgE.iterations() );
+//     mexPrintf("CONJUGATE GRADIENT error: %3f% \n",  cgE.error() );
+//     mexPrintf("Time take by CG Solver: %3f% microseconds \n", duration.count());
+//     mexPrintf("Vector Rows: %3i% \n", v0.rows());
+//     mexPrintf("Vector Cols: %3i% \n", v0.cols());
+//     mexEvalString("drawnow;");
+//     v1 = XiEVector;
     
-    mwSize rows = stateSpace.S;
-    mwSize cols = 1;
+//     /* Try to use LU decomp*/
+//     /*
+//     Eigen::SparseLU<SpMat > solver; 
+//     solver.analyzePattern(linearSys_vars.Le);
+//     solver.factorize(linearSys_vars.Le);
+//     v1 = solver.solve(v0);
+//     */
+//     /* Send solution to MATLAB */
     
-    //mexPrintf("Conjugate gradient took iterations:%3i%\n", cgE.iterations());
+//     mwSize rows = stateSpace.S;
+//     mwSize cols = 1;
+    
+//     //mexPrintf("Conjugate gradient took iterations:%3i%\n", cgE.iterations());
 
-    plhs[0] = mxCreateDoubleMatrix(rows, cols, mxREAL); // Create MATLAB array of same size
-    Eigen::Map<Eigen::MatrixXd> map(mxGetPr(plhs[0]), rows, cols); // Map the array
-    map = v1;
+//     plhs[0] = mxCreateDoubleMatrix(rows, cols, mxREAL); // Create MATLAB array of same size
+//     Eigen::Map<Eigen::MatrixXd> map(mxGetPr(plhs[0]), rows, cols); // Map the array
+//     map = v1;
     
-//     plhs[1] = mxCreateDoubleMatrix(1, 1, mxREAL); // Create MATLAB array of same size
-//     Eigen::Map<Eigen::MatrixXd> map1(mxGetPr(plhs[1]), 1, 1); // Map the array
-//     map1 = cgE.iterations();
-//     
-//     plhs[2] = mxCreateDoubleMatrix(1, 1, mxREAL); // Create MATLAB array of same size
-//     Eigen::Map<Eigen::MatrixXd> map2(mxGetPr(plhs[2]), 1, 1); // Map the array
-//     map2 = cgE.error();
-//     
+// //     plhs[1] = mxCreateDoubleMatrix(1, 1, mxREAL); // Create MATLAB array of same size
+// //     Eigen::Map<Eigen::MatrixXd> map1(mxGetPr(plhs[1]), 1, 1); // Map the array
+// //     map1 = cgE.iterations();
+// //     
+// //     plhs[2] = mxCreateDoubleMatrix(1, 1, mxREAL); // Create MATLAB array of same size
+// //     Eigen::Map<Eigen::MatrixXd> map2(mxGetPr(plhs[2]), 1, 1); // Map the array
+// //     map2 = cgE.error();
+// //  
+    
 }
 

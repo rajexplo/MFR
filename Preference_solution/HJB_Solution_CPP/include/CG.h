@@ -74,8 +74,7 @@ public:
     //function to construt matrix
     
     void constructMat(stateVars & state_vars);
-    
-};
+    };
 
 
 

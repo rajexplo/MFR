@@ -223,12 +223,53 @@ matList.push_back(T(i, i + 2*state_vars.increVec(n), - dt * ( secondCoefE / pow(
 }
 
 
-void solveCG(MatrixXd &preLoadMat, modelData* model){
+VectorXd solveCG(MatrixXd &preLoadMat, modelData* model){
 
   stateVars stateSpace(preLoadMat);
+  linearSysVars linearSys_vars(stateSpace, model->A, model->B, model->C, model->D, model->dt);
+  linearSys_vars.constructMat(stateSpace);
+  MatrixXd A =  model->A;
+  MatrixXd B =  model->B;
+  MatrixXd C =  model->C;
+  MatrixXd D =  model->D;
+  MatrixXd v0 = model->v0;
+  float dt = model->dt;
 
+  
+  VectorXd v1;
+  v1.resize(stateSpace.S, 1);
+  v1 = v0; // smart guess
+  v0 = v0.array() + dt * D.array(); // transform v0 into rhs
+  // saveMarket(v0,"rhs.dat");
+  //saveMarket(v1,"v1.dat");
+  for (int i = 0; i < stateSpace.S; ++i) {
 
+        for (int n = (stateSpace.N - 1); n >=0; --n ) {
+            
+            //check whether it's at upper or lower boundary
+            if ( std::abs(stateSpace.stateMat(i,n) - stateSpace.upperLims(n)) < stateSpace.dVec(n)/2 ) {  //upper boundary
+             //   v0(i) = 0.0001;
+            } else if ( std::abs( stateSpace.stateMat(i,n) - stateSpace.lowerLims(n)) < stateSpace.dVec(n)/2 ) { //lower boundary
+             //v0(i) = 0.0001;            
+            }
+        }
+    }
 
+  Eigen::VectorXd XiEVector;
+  //saveMarket(linearSys_vars.Le,"System.dat");
+ 
+  Eigen::LeastSquaresConjugateGradient<SpMat> cgE;
+  //Eigen::BiCGSTAB< Eigen::SparseMatrix<double>,Eigen::IncompleteLUT<double> > cgE;
+  //Eigen::ConjugateGradient<Eigen::SparseMatrix<double>,Eigen:: Lower|Eigen::Upper> cgE;
+  cgE.setMaxIterations(10000);
+  cgE.setTolerance( 0.0000000001 );
+  cgE.compute(linearSys_vars.Le);
+  XiEVector = cgE.solveWithGuess(v0,v1);
+  v1 = XiEVector;
+  cout << "CONJUGATE GRADIENT TOOK (number of iterations):" << cgE.iterations() << endl;
+  cout << "CONJUGATE GRADIENT error:" << cgE.error() << endl;
+    
+  return v1;
 }
          
 

@@ -1,10 +1,11 @@
 %%%%% This file generates results for the Consumption Damage model.
 % Authors: Mike Barnett, Jieyao Wang
 % Last update: Dec 9, 2019
+
 close all
 clear all
 clc
-profile on;
+%profile on;
 
 %% Step 0: Set up solver
 mex solveCGNatural.cpp;
@@ -221,7 +222,8 @@ RE_total = 1.*xi_p.*RE;
 
 % inputs for solver
 A = -delta.*ones(size(r_mat));
-B_r = -e_star+psi_0.*(j.^psi_1).*exp(psi_1.*(k_mat-r_mat))-0.5.*(sigma_r.^2);
+%B_r = j;% psi_0.*(j.^psi_1);%.*exp(psi_1.*(k_mat-r_mat));%-0.5.*(sigma_r.^2);
+B_r = -e_star + psi_0.*(j.^psi_1).*exp(psi_1.*(k_mat-r_mat))-0.5.*(sigma_r.^2);
 B_k = mu_k+phi_0.*log(1+i_k.*phi_1)-0.5.*(sigma_k.^2);
 B_t = e_star.*exp(r_mat);
 C_rr = 0.5.*sigma_r.^2.*ones(size(r_mat));
@@ -242,9 +244,11 @@ model.v0   = v0(:);
 model.dt   = dt;
 
 %%% Start Here
+tic
 out = solveCGNatural(stateSpace, model);
+toc
 out_comp = reshape(out,size(v0)).*ones(size(r_mat));
-    
+  
 disp(['Error: ', num2str(max(max(max(abs(out_comp - v1_initial)))))])
 v0 = v0.*ones(size(v0));
 v0 = reshape(out,size(v0));

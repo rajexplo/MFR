@@ -42,11 +42,11 @@ typedef struct foo{
   }dataGen;
 
 typedef struct foo1{
-  VectorXd A;
+  MatrixXd A;
   MatrixXd B;
   MatrixXd C;
-  VectorXd D;
-  VectorXd v0;
+  MatrixXd D;
+  MatrixXd v0;
   float dt;
 }modelData;
 
@@ -65,7 +65,7 @@ vector<MatrixXd> q2_tilde_fnc(dataGen* intData, vector<MatrixXd>& scale_2, float
 vector<MatrixXd> quad_int_J2(dataGen* intData, vector<MatrixXd> &scale_quad, const float a, const float b, const int n);
 
 VectorXd flatMat(vector <MatrixXd> &F_mat);
-void solveCG(MatrixXd &preLoadMat, modelData* model);
+VectorXd solveCG(MatrixXd &preLoadMat, modelData* model);
 
 
 
