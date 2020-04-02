@@ -166,7 +166,7 @@ int main(int argc, char **argv){
       v0_dt.push_back(v0_dt_temp);
 }
   
-   int itr=1;
+   int iter=1;
    int j;
 
    for(int k=0; k < v0_dt.size(); k++){
@@ -374,6 +374,10 @@ int main(int argc, char **argv){
     decltype(v0) C_kk;
     decltype(v0) C_tt;
     decltype(v0) D;
+    decltype(v0) out_comp;
+    decltype(v0) q;
+    decltype(v0) pde_error;
+    decltype(v0) lhs_error_mat;
     
     MatrixXd beta_fM = beta_f*dummyMat;
     
@@ -411,6 +415,10 @@ int main(int argc, char **argv){
       C_kk.push_back(v0_dr_temp);
       C_tt.push_back(v0_dr_temp);
       D.push_back(v0_dr_temp);
+      out_comp.push_back(v0_dr_temp);
+      q.push_back(v0_dr_temp);
+      pde_error.push_back(v0_dr_temp);
+      lhs_error_mat.push_back(v0_dr_temp);
 }
 
    for(int k=0; k < Bcoeff.size(); k++){
@@ -579,14 +587,64 @@ int main(int argc, char **argv){
     
 
   
-    VectorXd v1 = solveCG(stateSpace, model);
-    time(&end);
-    double time_taken = double(end - start); 
-    cout << "Time taken by New program is : " << fixed << time_taken << setprecision(5); 
+    VectorXd sol = solveCG(stateSpace, model);
+    
     cout << " sec " << endl;
 
+    int nrows=r_mat[0].rows();
+    int ncols=r_mat[0].cols();
+    int element = nrows*ncols;
+    
 
-    //cout << "v1 is: " << v1 << endl;
+    for(int k=0; k < out_comp.size(); k++){
+      MatrixXd temp = sol.segment(element*k, element);
+      temp.resize(nrows, ncols);
+      out_comp[k] = temp;
+  }
+
+    v0 = out_comp;
+
+    for(int k=0; k < q.size(); k++){
+      MatrixXd term1 = alpha*dummyMat - i_k[k]-jtemp[k];
+      MatrixXd term2 = term1.cwiseInverse();
+      q[k]=delta*(1-kappa)*term2;
+    }
+
+
+    time(&end);
+    double time_taken = double(end - start); 
+    cout << "Time taken by New program is : " << fixed << time_taken << setprecision(5);
+
+    float eta = 0.05;
+    float diff_pde_error = 1;
+
+    for(int k=0; k < pde_error.size(); k++){
+      pde_error[k]=A[k].cwiseProduct(v0[k]) + B_r[k].cwiseProduct(v0_dr[k])
+	+ B_t[k].cwiseProduct(v0_dt[k]) + B_k[k].cwiseProduct(v0_dk[k])
+	+ C_rr[k].cwiseProduct(v0_drr[k]) + C_kk[k].cwiseProduct(v0_dkk[k])
+	+ C_tt[k].cwiseProduct(v0_dtt[k]) + D[k];
+   }
+
+    VectorXd rhs_err(10000);    
+    VectorXd lhs_err(10000);
+    rhs_err(iter) = maxVec(pde_error);
+    lhs_err(iter) =maxVecErr(out_comp, v1_initial); 
+
+    cout << "lhs_err is " << lhs_err(iter) << endl;
+
+    while ((lhs_err(iter) - tol) >= EPS){
+     vold = v0;
+
+     if (iter > 2000){
+       dt = 0.1;
+     }else{
+       dt = 0.2;
+     }
+     
+
+
+
+}
 
     
     

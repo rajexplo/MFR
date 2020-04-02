@@ -298,6 +298,29 @@ VectorXd flatMat(vector <MatrixXd> &F_mat){
 
 }
 
+double maxVec(vector<MatrixXd> & errMat){
+  int nz = errMat.size();
+  double maxVal;
+  VectorXd maxArray(nz);
+  for (int k=0; k < nz; k++){
+    MatrixXd temp = errMat[k].array().abs();
+    maxArray[k] =temp.maxCoeff();
+  }
+  maxVal = maxArray.maxCoeff();
+  return maxVal;
+}
+
+double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd> & Mat2){
+  int nz = Mat1.size();
+  double maxVal;
+  vector<MatrixXd> matErr(nz);
+  for (int k=0; k < nz; k++){
+    matErr[k] =Mat1[k] - Mat2[k];
+  }
+  maxVal=maxVec(matErr);
+  return maxVal;
+}
+
 
 
 

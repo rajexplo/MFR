@@ -67,6 +67,10 @@ vector<MatrixXd> quad_int_J2(dataGen* intData, vector<MatrixXd> &scale_quad, con
 VectorXd flatMat(vector <MatrixXd> &F_mat);
 VectorXd solveCG(MatrixXd &preLoadMat, modelData* model);
 
+double maxVec(vector<MatrixXd> &mat1);
+
+double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd> & Mat2);
+
 
 
 #endif

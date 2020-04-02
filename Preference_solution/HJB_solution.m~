@@ -447,7 +447,6 @@ end
 
 save([ambiguity,'_',damage_level]); % save HJB solution
 
-% Stop Tmorrow's target
 %% Step 4: Simulation
 
 T = 100; % 100 years
