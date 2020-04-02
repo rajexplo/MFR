@@ -6,9 +6,11 @@ close all
 clear all
 clc
 %profile on;
+tic
 
 %% Step 0: Set up solver
 mex solveCGNatural.cpp;
+
 
 %% Step 1: Specify ambiguity and damage level
 
@@ -242,9 +244,9 @@ model.C    = [C_rr(:), C_tt(:), C_kk(:)];
 model.D    = D(:);
 model.v0   = v0(:);
 model.dt   = dt;
-
-%%% Start Here
-tic
+% toc
+% %%% Start Here
+% tic
 out = solveCGNatural(stateSpace, model);
 toc
 out_comp = reshape(out,size(v0)).*ones(size(r_mat));

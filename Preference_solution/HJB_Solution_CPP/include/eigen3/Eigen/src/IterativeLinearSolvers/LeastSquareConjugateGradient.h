@@ -68,7 +68,6 @@ void least_square_conjugate_gradient(const MatrixType& mat, const Rhs& rhs, Dest
   Index i = 0;
   while(i < maxIters)
   {
-    i++;
     tmp.noalias() = mat * p;
 
     Scalar alpha = absNew / tmp.squaredNorm();      // the amount we travel on dir
@@ -77,7 +76,6 @@ void least_square_conjugate_gradient(const MatrixType& mat, const Rhs& rhs, Dest
     normal_residual = mat.adjoint() * residual;     // update residual of the normal equation
     
     residualNorm2 = normal_residual.squaredNorm();
-    //  std::cout<<"Error: "<<residualNorm2<<std::endl;
     if(residualNorm2 < threshold)
       break;
     
@@ -87,7 +85,7 @@ void least_square_conjugate_gradient(const MatrixType& mat, const Rhs& rhs, Dest
     absNew = numext::real(normal_residual.dot(z));  // update the absolute value of r
     RealScalar beta = absNew / absOld;              // calculate the Gram-Schmidt value used to create the new search direction
     p = z + beta * p;                               // update search direction
-
+    i++;
   }
   tol_error = sqrt(residualNorm2 / rhsNorm2);
   iters = i;

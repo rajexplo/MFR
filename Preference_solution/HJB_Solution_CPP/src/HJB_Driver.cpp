@@ -2,6 +2,7 @@
 #include <bits/stdc++.h>
 #include "HJB.h"
 #include "CG.h"
+#include <omp.h>
 
 
 
@@ -17,8 +18,10 @@ using namespace std;
  */
 
 int main(int argc, char **argv){
-  Eigen::initParallel();
-    
+   Eigen::initParallel();
+   time_t start, end;
+    time(&start);
+    ios_base::sync_with_stdio(false);
     int ambiguity = 1;	
     int damage_level=1;
     float xi_p;
@@ -87,6 +90,7 @@ int main(int argc, char **argv){
     /*Declare and Initialize sigma matrix*/
     MatrixXd sigma(2,2);
     sigma <<  pow(sigma_1, 2), rho_12, rho_12, pow(sigma_2, 2);
+   
 
    
     /*Declare and Initialize Sigma matrix*/
@@ -146,37 +150,23 @@ int main(int argc, char **argv){
     float dt =0.3;
 
     vector<MatrixXd> v0;
+    decltype(v0) v1_initial;
+    decltype(v0) out;
+    decltype(v0) vold;
+    decltype(v0) v0_dt;
+    MatrixXd v0_dt_temp(r_mat[0].rows(), r_mat[0].cols());
+    v0_dt_temp.fill(0.0);
 
+   #pragma omp parallal for
     for (int i=0; i < r_mat.size(); i++){
       v0.push_back(kappa*r_mat[i] + (1-kappa)*k_mat[i] - beta_f * F_mat[i]);
-    }
-
-    decltype(v0) v1_initial;
-     for (int i=0; i < r_mat.size(); i++){
       v1_initial.push_back(v0[i]);
-    }
-
-   decltype(v0) out;
-   for (int i=0; i < r_mat.size(); i++){
       out.push_back(v0[i]);
-    }
-
-   decltype(v0) vold;
-   for (int i=0; i < r_mat.size(); i++){
       vold.push_back(v0[i]);
-    }
-
+      v0_dt.push_back(v0_dt_temp);
+}
+  
    int itr=1;
-
-   //v0_dt data structure
-   decltype(v0) v0_dt;
-   MatrixXd v0_dt_temp(r_mat[0].rows(), r_mat[0].cols());
-   v0_dt_temp.fill(0.0);
-   
-   for (int i=0; i < r_mat.size(); i++){
-        v0_dt.push_back(v0_dt_temp);
-    }
-
    int j;
 
    for(int k=0; k < v0_dt.size(); k++){
@@ -186,10 +176,7 @@ int main(int argc, char **argv){
      v0_dt[k].col(j)=(1.0/ht)*(v0[k].col(j)-v0[k].col(j-1));
      v0_dt[k].col(0)=(1.0/ht)*(v0[k].col(1)-v0[k].col(0));
     }
-
    
-
-      
     //v0_dr data structure
    decltype(v0) v0_dr;
    MatrixXd v0_dr_temp(r_mat[0].rows(), r_mat[0].cols());
@@ -208,8 +195,7 @@ int main(int argc, char **argv){
      v0_dr[k].row(0)=(1.0/hr)*(v0[k].row(1)-v0[k].row(0));
     }
      
-
-      //v0_dk data structure
+   //v0_dk data structure
    decltype(v0) v0_dk;
    MatrixXd v0_dk_temp(r_mat[0].rows(), r_mat[0].cols());
    v0_dk_temp.fill(0.0);
@@ -457,7 +443,8 @@ int main(int argc, char **argv){
      pi_tilde_1[k] = weight*term1.array().exp();
      
    }
- 	      
+
+    
     dataGen *intData = new dataGen;
 
     intData->F_mat = F_mat;
@@ -475,10 +462,12 @@ int main(int argc, char **argv){
     vector <MatrixXd> scale_2;
     scale_2= quad_int(intData, a,  b, n);
 
+    #pragma omp parallel for
     for (int k=0; k < I_2.size(); k++){
       I_2[k]= -1 * xi_p *scale_2[k].array().log();
       }
     vector<MatrixXd> J_2_without_e = quad_int_J2(intData, scale_2, a, b, n);
+    #pragma omp parallel for
     for(int k=0; k < J_2_with_e.size(); k++){
       J_2_with_e[k] = J_2_without_e[k].cwiseProduct(e_hat[k]);
       pi_tilde_2[k] =(1-weight)*(-1/xi_p * I_2[k]).array().exp();
@@ -533,7 +522,8 @@ int main(int argc, char **argv){
 	         + delta*(1-kappa)*(term2 + k_mat[k]) 
                  + drift_distort[k] + RE_total[k];
 }
-      
+    
+   
 
     int sz=r_mat.size()*r_mat[0].rows()*r_mat[0].cols();
     MatrixXd stateSpace(sz, 3);
@@ -579,18 +569,20 @@ int main(int argc, char **argv){
     model->D = Dftemp;
     model->v0 = v_0ftemp;
     model->dt = dt;
+
+       
     
     int nth = Eigen::nbThreads( );
     cout << "Number of Threads: " << nth << endl;
 
-    time_t start, end;
+    
+    
 
-    time(&start);
-    ios_base::sync_with_stdio(false);
+  
     VectorXd v1 = solveCG(stateSpace, model);
     time(&end);
     double time_taken = double(end - start); 
-    cout << "Time taken by program is : " << fixed << time_taken << setprecision(5); 
+    cout << "Time taken by New program is : " << fixed << time_taken << setprecision(5); 
     cout << " sec " << endl;
 
 

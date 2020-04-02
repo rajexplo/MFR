@@ -4,8 +4,10 @@ HDRDIR  = ./include
 
 LIBDIR  = 
 
-CXX      = g++-9 -std=c++17 -fopenmp -ffast-math 
-LD      = g++-9 -std=c++17 -fopenmp -ffast-math
+CXX     =  g++-9 -std=c++17 -fopenmp -ffast-math 
+LD      =  g++-9 -std=c++17 -fopenmp -ffast-math
+
+
 
 # compiler flags to be used (set to compile with debugging on)
 CFLAGS = -I$(HDRDIR) -I$(HDRDIR)/eigen3 -O3
