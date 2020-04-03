@@ -321,6 +321,14 @@ double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd> & Mat2){
   return maxVal;
 }
 
+void mat3Dresize(vector <MatrixXd> &out_comp, VectorXd &sol, const int nz, const int nrows, const int ncols, const int element){
+     for(int k=0; k < nz; k++){
+      MatrixXd temp = sol.segment(element*k, element);
+      temp.resize(nrows, ncols);
+      out_comp[k] = temp;
+  }
+}
+
 
 
 

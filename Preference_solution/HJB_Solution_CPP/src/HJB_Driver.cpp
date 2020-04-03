@@ -583,25 +583,14 @@ int main(int argc, char **argv){
     int nth = Eigen::nbThreads( );
     cout << "Number of Threads: " << nth << endl;
 
-    
-    
-
-  
     VectorXd sol = solveCG(stateSpace, model);
-    
-    cout << " sec " << endl;
 
     int nrows=r_mat[0].rows();
     int ncols=r_mat[0].cols();
     int element = nrows*ncols;
     
-
-    for(int k=0; k < out_comp.size(); k++){
-      MatrixXd temp = sol.segment(element*k, element);
-      temp.resize(nrows, ncols);
-      out_comp[k] = temp;
-  }
-
+    mat3Dresize(out_comp, sol, out_comp.size(), nrows, ncols, element);
+    
     v0 = out_comp;
 
     for(int k=0; k < q.size(); k++){
@@ -637,9 +626,30 @@ int main(int argc, char **argv){
 
      if (iter > 2000){
        dt = 0.1;
-     }else{
+     }else if (iter > 100){
        dt = 0.2;
      }
+    
+    model->dt = dt;
+    VectorXd v_0f = flatMat(v0);
+    //cout << v_0f << endl;
+    MatrixXd v_0ftemp(Map<MatrixXd>(v_0f.data(), v_0f.rows(), v_0f.cols()));
+    model->v0 = v_0ftemp;
+
+    sol = solveCG(stateSpace, model);
+    cout << "sol is " << endl;
+    cout << sol << endl;
+    
+   mat3Dresize(out_comp, sol, out_comp.size(), nrows, ncols, element);
+   float err = maxVecErr(out_comp, vold);
+   cout << "Loop error is" << err << endl;
+   v0=out_comp;
+
+
+    iter+=1;
+
+
+
      
 
 
@@ -647,7 +657,8 @@ int main(int argc, char **argv){
 }
 
     
-    
+   cout << " sec " << endl;
+ 
     return 0;
 
 }

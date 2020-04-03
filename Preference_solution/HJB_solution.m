@@ -248,7 +248,6 @@ model.dt   = dt;
 % %%% Start Here
 % tic
 out = solveCGNatural(stateSpace, model);
-toc
 out_comp = reshape(out,size(v0)).*ones(size(r_mat));
   
 disp(['Error: ', num2str(max(max(max(abs(out_comp - v1_initial)))))])
@@ -291,6 +290,7 @@ while lhs_error > tol % check for convergence
 
     v0 = v0.*ones(size(v0));
     v0 = reshape(out,size(v0));
+ toc
 
     if (mod(iter, 100) == 0)
         save([ambiguity,'_',damage_level]); % save HJB solution
@@ -337,6 +337,8 @@ while lhs_error > tol % check for convergence
 
     Converged = 0;
     nums = 0;
+    %%Finish till monday!
+    
     while Converged == 0
         istar = (phi_0.*phi_1.*v0_dk./q - 1)./phi_1;
         jstar = (q.*exp(psi_1.*(r_mat-k_mat))./((v0_dr).*psi_0.*psi_1)).^(1./(psi_1 - 1));

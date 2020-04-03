@@ -70,6 +70,7 @@ VectorXd solveCG(MatrixXd &preLoadMat, modelData* model);
 double maxVec(vector<MatrixXd> &mat1);
 
 double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd> & Mat2);
+void mat3Dresize(vector <MatrixXd> &out_comp, VectorXd &sol, const int nz, const int nrows, const int ncols, const int element);
 
 
 
