@@ -110,6 +110,81 @@ void ndGrid(VectorXd r, VectorXd t, VectorXd k, vector<MatrixXd> &r_mat, vector<
   k_mat=r_mat_w;
 }
 
+void v0dt(vector <MatrixXd> &v0_dt, vector<MatrixXd> &v0, float ht){
+	int j;
+	for(int k=0; k < v0_dt.size(); k++){
+		for( j=1; j< v0_dt[0].cols()-1; j++){
+			v0_dt[k].col(j)= (1.0/(2.0*ht))*(v0[k].col(j+1)-v0[k].col(j-1));
+      }
+	  v0_dt[k].col(j)=(1.0/ht)*(v0[k].col(j)-v0[k].col(j-1));
+	  v0_dt[k].col(0)=(1.0/ht)*(v0[k].col(1)-v0[k].col(0));
+    }
+
+}
+
+
+
+
+void v0dr(vector <MatrixXd> &v0_dr, vector<MatrixXd> &v0, float hr){
+	int j;
+    for(int k=0; k < v0_dr.size(); k++){
+     for(j=1; j< v0_dr[0].rows()-1; j++){
+       v0_dr[k].row(j)= (1.0/(2.0*hr))*(v0[k].row(j+1)-v0[k].row(j-1));
+      }
+     v0_dr[k].row(j)=(1.0/hr)*(v0[k].row(j)-v0[k].row(j-1));
+     v0_dr[k].row(0)=(1.0/hr)*(v0[k].row(1)-v0[k].row(0));
+    }
+}
+
+
+void v0dk(vector <MatrixXd> &v0_dk, vector<MatrixXd> &v0, float hk){
+    int j;
+	for( int k=1; k < v0_dk.size()-1; k++){
+      v0_dk[k] = (1/(2*hk))*(v0[k+1]-v0[k-1]);
+      j=k;
+    }
+    v0_dk[j+1] = (1/hk)*(v0[j+1]-v0[j]);
+    v0_dk[0] = (1/hk)*(v0[1]-v0[0]);
+}
+
+void v0dtt(vector<MatrixXd> &v0_dtt, vector<MatrixXd> &v0, float ht){
+	int j;
+    for(int k=0; k < v0_dtt.size(); k++){
+      for(j=1; j< v0_dtt[0].cols()-1; j++){
+       
+        v0_dtt[k].col(j)= (1.0/(ht*ht))*(v0[k].col(j+1) + v0[k].col(j-1)-2*v0[k].col(j));
+       }
+      v0_dtt[k].col(j)=(1.0/(ht*ht))*(v0[k].col(j) + v0[k].col(j-2) - 2 * v0[k].col(j-1) );
+      v0_dtt[k].col(0)=(1.0/(ht*ht))*(v0[k].col(2) + v0[k].col(0) -  2 * v0[k].col(1));
+     }
+ }
+ 
+ void v0drr(vector<MatrixXd> &v0_drr, vector<MatrixXd> &v0, float hr){
+	 int j;
+     for(int k=0; k < v0_drr.size(); k++){
+      for(j=1; j< v0_drr[0].rows()-1; j++){
+        v0_drr[k].row(j)= (1.0/(hr*hr))*(v0[k].row(j+1) + v0[k].row(j-1) - 2*v0[k].row(j));
+       }
+      v0_drr[k].row(j)=(1.0/(hr*hr))*(v0[k].row(j) + v0[k].row(j-2) - 2*v0[k].row(j-1));
+      v0_drr[k].row(0)=(1.0/(hr*hr))*(v0[k].row(2) + v0[k].row(0) - 2*v0[k].row(1));
+     }
+}
+ 
+ 
+void v0dkk(vector<MatrixXd> &v0_dkk, vector<MatrixXd> &v0, float hk){
+	 int j;
+     for( int k=1; k < v0_dkk.size()-1; k++){
+       v0_dkk[k] = (1/(hk*hk))*(v0[k+1] + v0[k-1] - 2.0* v0[k]);
+       j=k;
+     }
+     v0_dkk[j+1] = (1/(hk*hk))*(v0[j+1] + v0[j-1]-2*v0[j]);
+     v0_dkk[0] = (1/(hk*hk))*(v0[2] + v0[0]-2.0*v0[1]);
+}
+
+
+
+
+
 float normpdf(float x, float mu, float sigma){
   float y;
   float d=1.0/(sqrt(2.0*M_PI) * sigma);  
@@ -310,12 +385,12 @@ double maxVec(vector<MatrixXd> & errMat){
   return maxVal;
 }
 
-double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd> & Mat2){
+double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd> & Mat2, float eta){
   int nz = Mat1.size();
   double maxVal;
   vector<MatrixXd> matErr(nz);
   for (int k=0; k < nz; k++){
-    matErr[k] =Mat1[k] - Mat2[k];
+    matErr[k] =(1.0/eta)*(Mat1[k] - Mat2[k]);
   }
   maxVal=maxVec(matErr);
   return maxVal;
@@ -330,6 +405,44 @@ void mat3Dresize(vector <MatrixXd> &out_comp, VectorXd &sol, const int nz, const
 }
 
 
+void iStar(vector<MatrixXd> &v0_dk, vector<MatrixXd> &q, vector<MatrixXd> &istar, float phi_0, float phi_1, MatrixXd& dummyMat){
+	for(int k=0; k < v0_dk.size(); k++){	
+		istar[k] = (1.0/phi_1)*(phi_0 * phi_1*v0_dk[k].cwiseProduct(q[k].cwiseInverse())-1*dummyMat);		
+	}
+	
+}
+
+void jStar(vector<MatrixXd> &v0_dr, vector<MatrixXd> &r_mat, vector<MatrixXd> &k_mat, vector<MatrixXd> &q, vector<MatrixXd> &jstar, float psi_0, float psi_1){
+	for(int k=0; k < v0_dr.size(); k++){			
+		MatrixXd term1 = (psi_1*(r_mat[k] - k_mat[k])).array().exp();
+		MatrixXd term2 = term1.cwiseProduct(q[k]);
+		MatrixXd term3 = psi_0*psi_1*v0_dr[k];
+		float temp = 1.0/(psi_1-1);
+		MatrixXd term4 = term2.cwiseProduct(term3.cwiseInverse()); 	
+		jstar[k] = term4.array().pow(temp);
+	}	
+	
+}
+
+void qStar(vector<MatrixXd> &istar, vector<MatrixXd> &jstar, vector<MatrixXd> &q, vector<MatrixXd> &qstar, MatrixXd &dummyMat, float eta, float delta, float kappa, float alpha){
+	vector<MatrixXd> aStar(istar.size());
+	
+	for(int k=0; k < istar.size(); k++){
+		aStar[k] = istar[k] + jstar[k];		
+	}	
+	
+	double maxVal=maxVec(aStar);
+	for(int k=0; k < istar.size(); k++){
+		if((alpha-maxVal) > EPS){
+			MatrixXd temp= (alpha*dummyMat-istar[k]-jstar[k]);
+			qstar[k] = eta*delta *(1-kappa)*temp.cwiseInverse() + +(1-eta)*q[k];
+		}
+		else{
+			qstar[k] = 2.0*q[k];						
+		}				
+	}	
+	
+}
 
 
 

@@ -69,9 +69,16 @@ VectorXd solveCG(MatrixXd &preLoadMat, modelData* model);
 
 double maxVec(vector<MatrixXd> &mat1);
 
-double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd> & Mat2);
+double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd> & Mat2, float eta);
 void mat3Dresize(vector <MatrixXd> &out_comp, VectorXd &sol, const int nz, const int nrows, const int ncols, const int element);
-
-
-
+void v0dt(vector <MatrixXd> &v0_dt, vector<MatrixXd> &v0, float ht);
+void v0dr(vector <MatrixXd> &v0_dr, vector<MatrixXd> &v0, float hr);
+void v0dk(vector <MatrixXd> &v0_dk, vector<MatrixXd> &v0, float hk);
+void vodtt(vector <MatrixXd> & v0_dtt, vector <MatrixXd> v0, float ht);
+void v0dtt(vector<MatrixXd> &v0_dtt, vector<MatrixXd> &v0, float ht);
+void v0drr(vector<MatrixXd> &v0_drr, vector<MatrixXd> &v0, float hr);
+void v0dkk(vector<MatrixXd> &v0_dkk, vector<MatrixXd> &v0, float hk);
+void iStar(vector<MatrixXd> &v0_dk, vector<MatrixXd> &q, vector<MatrixXd> &istar, float phi_0, float phi_1, MatrixXd& dummyMat);
+void jStar(vector<MatrixXd>& v0_dr, vector<MatrixXd>&r_mat, vector<MatrixXd>& k_mat, vector<MatrixXd>&q, vector<MatrixXd>& jstar, float psi_0, float psi_1);
+void qStar(vector<MatrixXd> &istar, vector<MatrixXd> &jstar, vector<MatrixXd> &q, vector<MatrixXd> &qstar, MatrixXd &dummyMat, float eta, float delta, float kappa, float alpha);
 #endif

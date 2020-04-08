@@ -74,7 +74,7 @@ xi_d = -1.*(1-kappa);
 bar_gamma_2_plus = weight.*0+(1-weight).*gamma_2_plus;
 
 
-%% Step 3: Solve HJB
+%%% Step 3: Solve HJB
 r_min = 0;
 r_max = 9; %r = logR
 F_min = 0;
@@ -211,7 +211,7 @@ drift_distort = (pi_tilde_1_norm.*J_1 ...
     +pi_tilde_2_norm.*J_2); 
 
 
-%%%% Start Here
+
 
 if (weight == 0 || weight == 1)
     RE = pi_tilde_1_norm.*R_1 + pi_tilde_2_norm.*R_2;
@@ -290,7 +290,7 @@ while lhs_error > tol % check for convergence
 
     v0 = v0.*ones(size(v0));
     v0 = reshape(out,size(v0));
- toc
+
 
     if (mod(iter, 100) == 0)
         save([ambiguity,'_',damage_level]); % save HJB solution
@@ -358,7 +358,8 @@ while lhs_error > tol % check for convergence
         
         nums = nums+1;
     end
-
+toc
+   %%%% Start Here
     a_1 = zeros(size(r_mat));
     b_1 = xi_d.*e_hat.*exp(r_mat).*gamma_1;
     c_1 = 2.*xi_d.*e_hat.*exp(r_mat).*F_mat.*gamma_2;

@@ -128,7 +128,8 @@ int main(int argc, char **argv){
     float FSize = F_max / ht + 1;
     float kSize = ((k_max-k_min) / hk) + 1 ;
 
-    
+    int Converged = 0;
+    int nums = 0;
 
     VectorXd r,t,k;
    
@@ -154,8 +155,18 @@ int main(int argc, char **argv){
     decltype(v0) out;
     decltype(v0) vold;
     decltype(v0) v0_dt;
+	decltype(v0) v0_dr;
+	decltype(v0) v0_dk;
+	decltype(v0) v0_dtt;
+	decltype(v0) v0_drr;
+	decltype(v0) v0_dkk;
+	
     MatrixXd v0_dt_temp(r_mat[0].rows(), r_mat[0].cols());
     v0_dt_temp.fill(0.0);
+    MatrixXd v0_dr_temp(r_mat[0].rows(), r_mat[0].cols());
+    v0_dr_temp.fill(0.0);
+    MatrixXd v0_dk_temp(r_mat[0].rows(), r_mat[0].cols());
+    v0_dk_temp.fill(0.0);
 
    #pragma omp parallal for
     for (int i=0; i < r_mat.size(); i++){
@@ -164,96 +175,32 @@ int main(int argc, char **argv){
       out.push_back(v0[i]);
       vold.push_back(v0[i]);
       v0_dt.push_back(v0_dt_temp);
+	  v0_dr.push_back(v0_dr_temp);
+	  v0_dk.push_back(v0_dr_temp);
+	  v0_dtt.push_back(v0_dt_temp);
+	  v0_drr.push_back(v0_dr_temp);
+	  v0_dkk.push_back(v0_dk_temp);
 }
   
    int iter=1;
    int j;
-
-   for(int k=0; k < v0_dt.size(); k++){
-     for(j=1; j< v0_dt[0].cols()-1; j++){
-       v0_dt[k].col(j)= (1.0/(2.0*ht))*(v0[k].col(j+1)-v0[k].col(j-1));
-      }
-     v0_dt[k].col(j)=(1.0/ht)*(v0[k].col(j)-v0[k].col(j-1));
-     v0_dt[k].col(0)=(1.0/ht)*(v0[k].col(1)-v0[k].col(0));
-    }
    
-    //v0_dr data structure
-   decltype(v0) v0_dr;
-   MatrixXd v0_dr_temp(r_mat[0].rows(), r_mat[0].cols());
-   v0_dr_temp.fill(0.0);
    
-   for (int i=0; i < r_mat.size(); i++){
-        v0_dr.push_back(v0_dr_temp);
-    }
-   
-    
-    for(int k=0; k < v0_dr.size(); k++){
-     for(j=1; j< v0_dr[0].rows()-1; j++){
-       v0_dr[k].row(j)= (1.0/(2.0*hr))*(v0[k].row(j+1)-v0[k].row(j-1));
-      }
-     v0_dr[k].row(j)=(1.0/hr)*(v0[k].row(j)-v0[k].row(j-1));
-     v0_dr[k].row(0)=(1.0/hr)*(v0[k].row(1)-v0[k].row(0));
-    }
-     
-   //v0_dk data structure
-   decltype(v0) v0_dk;
-   MatrixXd v0_dk_temp(r_mat[0].rows(), r_mat[0].cols());
-   v0_dk_temp.fill(0.0);
-   
-   for (int i=0; i < r_mat.size(); i++){
-        v0_dk.push_back(v0_dr_temp);
-    }
-   
-    
-    for( int k=1; k < v0_dk.size()-1; k++){
-      v0_dk[k] = (1/(2*hk))*(v0[k+1]-v0[k-1]);
-      j=k;
-    }
-
-    v0_dk[j+1] = (1/hk)*(v0[j+1]-v0[j]);
-    v0_dk[0] = (1/hk)*(v0[1]-v0[0]);
-    
-    
-    //v0_dtt data structure
-   decltype(v0) v0_dtt;
-     
-   for (int i=0; i < r_mat.size(); i++){
-        v0_dtt.push_back(v0_dt_temp);
-    }
-
-  
-   for(int k=0; k < v0_dtt.size(); k++){
-     for(j=1; j< v0_dtt[0].cols()-1; j++){
-       
-       v0_dtt[k].col(j)= (1.0/(ht*ht))*(v0[k].col(j+1) + v0[k].col(j-1)-2*v0[k].col(j));
-      }
-     v0_dtt[k].col(j)=(1.0/(ht*ht))*(v0[k].col(j) + v0[k].col(j-2) - 2 * v0[k].col(j-1) );
-     v0_dtt[k].col(0)=(1.0/(ht*ht))*(v0[k].col(2) + v0[k].col(0) -  2 * v0[k].col(1));
-    }
-
+   v0dt(v0_dt, v0, ht);
+   v0dr(v0_dr, v0, hr);   
+   v0dk(v0_dk, v0, hk);
+          
+   v0dtt(v0_dtt, v0, ht);
+   v0drr(v0_drr, v0, hr);
+   v0dkk(v0_dkk, v0, hk);
 
     //v0_drr data structure
-   decltype(v0) v0_drr;
-  
-   for (int i=0; i < r_mat.size(); i++){
-        v0_drr.push_back(v0_dr_temp);
-    }
       
-    for(int k=0; k < v0_drr.size(); k++){
-     for(j=1; j< v0_drr[0].rows()-1; j++){
-       v0_drr[k].row(j)= (1.0/(hr*hr))*(v0[k].row(j+1) + v0[k].row(j-1) - 2*v0[k].row(j));
-      }
-     v0_drr[k].row(j)=(1.0/(hr*hr))*(v0[k].row(j) + v0[k].row(j-2) - 2*v0[k].row(j-1));
-     v0_drr[k].row(0)=(1.0/(hr*hr))*(v0[k].row(2) + v0[k].row(0) - 2*v0[k].row(1));
-    }
+   
 
     
      //v0_dkk data structure
-   decltype(v0) v0_dkk;
-   for (int i=0; i < r_mat.size(); i++){
-        v0_dkk.push_back(v0_dk_temp);
-    }
-   
+     
     
     for( int k=1; k < v0_dk.size()-1; k++){
       v0_dkk[k] = (1/(hk*hk))*(v0[k+1] + v0[k-1] - 2.0* v0[k]);
@@ -378,6 +325,10 @@ int main(int argc, char **argv){
     decltype(v0) q;
     decltype(v0) pde_error;
     decltype(v0) lhs_error_mat;
+    decltype(v0) istar;
+	decltype(v0) jstar;
+	decltype(v0) qstar;
+	
     
     MatrixXd beta_fM = beta_f*dummyMat;
     
@@ -419,6 +370,9 @@ int main(int argc, char **argv){
       q.push_back(v0_dr_temp);
       pde_error.push_back(v0_dr_temp);
       lhs_error_mat.push_back(v0_dr_temp);
+	  istar.push_back(v0_dr_temp);
+	  jstar.push_back(v0_dr_temp);
+	  qstar.push_back(v0_dr_temp);
 }
 
    for(int k=0; k < Bcoeff.size(); k++){
@@ -527,7 +481,7 @@ int main(int argc, char **argv){
 	 MatrixXd term1 = alpha*dummyMat - i_k[k] - jtemp[k];
 	 MatrixXd term2 = term1.array().log();
 	 D[k] =  delta*kappa*term0 + delta*kappa*r_mat[k] 
-	         + delta*(1-kappa)*(term2 + k_mat[k]) 
+	         + delta*(1.0-kappa)*(term2 + k_mat[k]) 
                  + drift_distort[k] + RE_total[k];
 }
     
@@ -584,6 +538,7 @@ int main(int argc, char **argv){
     cout << "Number of Threads: " << nth << endl;
 
     VectorXd sol = solveCG(stateSpace, model);
+	
 
     int nrows=r_mat[0].rows();
     int ncols=r_mat[0].cols();
@@ -600,10 +555,7 @@ int main(int argc, char **argv){
     }
 
 
-    time(&end);
-    double time_taken = double(end - start); 
-    cout << "Time taken by New program is : " << fixed << time_taken << setprecision(5);
-
+    
     float eta = 0.05;
     float diff_pde_error = 1;
 
@@ -617,7 +569,7 @@ int main(int argc, char **argv){
     VectorXd rhs_err(10000);    
     VectorXd lhs_err(10000);
     rhs_err(iter) = maxVec(pde_error);
-    lhs_err(iter) =maxVecErr(out_comp, v1_initial); 
+    lhs_err(iter) =maxVecErr(out_comp, v1_initial, 1.0); 
 
     cout << "lhs_err is " << lhs_err(iter) << endl;
 
@@ -626,27 +578,65 @@ int main(int argc, char **argv){
 
      if (iter > 2000){
        dt = 0.1;
-     }else if (iter > 100){
+     }else if (iter > 1000){
        dt = 0.2;
      }
     
     model->dt = dt;
     VectorXd v_0f = flatMat(v0);
-    //cout << v_0f << endl;
     MatrixXd v_0ftemp(Map<MatrixXd>(v_0f.data(), v_0f.rows(), v_0f.cols()));
     model->v0 = v_0ftemp;
 
-    sol = solveCG(stateSpace, model);
-    cout << "sol is " << endl;
-    cout << sol << endl;
+   sol = solveCG(stateSpace, model);
     
    mat3Dresize(out_comp, sol, out_comp.size(), nrows, ncols, element);
-   float err = maxVecErr(out_comp, vold);
-   cout << "Loop error is" << err << endl;
+   float err = maxVecErr(out_comp, vold, 1.0);
+   iter+=1;
+   cout << "Diff : " << err << endl;
    v0=out_comp;
-
-
-    iter+=1;
+   v0dt(v0_dt, v0, ht);
+   v0dr(v0_dr, v0, hr); 
+   v0dk(v0_dk, v0, hk);
+   v0dtt(v0_dtt, v0, ht);
+   v0drr(v0_drr, v0, hr);
+   v0dkk(v0_dkk, v0, hk);
+   
+   e_hat = e_star;
+   vector<MatrixXd> q0 = q;
+   vector <MatrixXd> i_k_0 = i_k;
+   vector <MatrixXd> j_0 = jtemp;
+   
+   while(Converged==0){
+	   iStar(v0_dk, q, istar, phi_0,  phi_1, dummyMat);
+	   jStar(v0_dr, r_mat, k_mat, q, jstar, psi_0, psi_1);
+	   qStar(istar, jstar, q, qstar, dummyMat, eta, delta, kappa, alpha);
+	   double err = maxVecErr(qstar, q, eta);
+	   if((err - pow(10.0, -5)) <= EPS){
+		   Converged=1;		
+	   }
+	   q = qstar;
+	   i_k = istar;
+	   jtemp = jstar;   	  
+	   nums +=1;
+   }
+   
+   cout << "Nums is " << nums << endl;
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   time(&end);
+   double time_taken = double(end - start); 
+   cout << "Time taken by New program is : " << fixed << time_taken << setprecision(5);
+   
+ 
 
 
 
