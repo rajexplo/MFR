@@ -26,9 +26,34 @@ VectorXd csvread(char* filename){
      
 		 Eigen::Map<Eigen::VectorXd>McD(v.data(),v.size()); 
          return McD;
-         
-         
-} 
+	 
+	 } 
+	 
+	 
+void quadRead(VectorXd &xq, VectorXd &wq, char* filename){
+	char *data;
+    data=filename;
+    vector<double> x;
+	vector<double> w;
+    ifstream vec(data);
+    double xval;
+	double wval;
+    string line;
+	int dummy;
+	while(getline(vec, line)){
+		istringstream iss(line);
+		if(!(iss>>xval>>dummy>> wval)){break;}
+		x.push_back(xval); 
+		w.push_back(wval);
+	}
+	
+	Eigen::Map<Eigen::VectorXd>xt(x.data(),x.size());
+	Eigen::Map<Eigen::VectorXd>wt(w.data(),w.size());
+	xq=xt;
+	wq=wt;
+
+}	 
+	 
 
 /*
 This function determines the abscisas (x) and weights (w)  for the        %
@@ -272,22 +297,31 @@ vector<MatrixXd> quad_int(dataGen* intData, const float a, const float b, const 
 
       MatrixXd v0_dt_temp(intData->r_mat[0].rows(), intData->r_mat[0].cols());
       v0_dt_temp.fill(0.0);
-      for (int i=0; i < intData->F_mat.size(); i++){
-	scale_2.push_back(v0_dt_temp);
- }
+	  #pragma omp parallal for 
+	  for (int i=0; i < intData->F_mat.size(); i++){
+		  scale_2.push_back(v0_dt_temp);
+	  }
 
   VectorXd x(n), w(n); 
   quad_points_legendre(x, w, n);
   
+  //char str[1000]= "/Users/eklavya/WORK_RAJ/MFR/Preference_solution/HJB_Solution_CPP/quad_points_legendre/leg_30.txt";
+  
+  //quadRead(x, w, str);
+  //cout << "x" << x << endl;
+  //cout << "w" << w << endl;
+  
+  
+#pragma omp parallal for private(temp) 
   for(int i=0; i < n; i++){
     float temp = (((b-a)/2)*x[i] + (a+b)/2);
     scale_2_temp=scale_2_fnc(intData, temp);
-    for (auto j =0; j < scale_2.size(); j++){
+    for (int j =0; j < scale_2.size(); j++){
         scale_2[j]=scale_2[j] + w[i]*scale_2_temp[j];
      }
   }
 
-  for (auto j =0; j < scale_2.size(); j++){
+  for (int j =0; j < scale_2.size(); j++){
     scale_2[j]= 0.5*(b-a)*scale_2[j];
   }
   return scale_2;
@@ -340,6 +374,9 @@ vector<MatrixXd> quad_int_J2(dataGen* intData, vector<MatrixXd> &scale_quad, con
 
   VectorXd x(n), w(n); 
   quad_points_legendre(x, w, n);
+  //char str[1000]= "/Users/eklavya/WORK_RAJ/MFR/Preference_solution/HJB_Solution_CPP/quad_points_legendre/leg_30.txt";
+  
+  //quadRead(x, w, str);
   
   for(int i=0; i < n; i++){
     float temp = (((b-a)/2)*x[i] + (a+b)/2);
@@ -444,6 +481,77 @@ void qStar(vector<MatrixXd> &istar, vector<MatrixXd> &jstar, vector<MatrixXd> &q
 	
 }
 
+void b1c1(vector<MatrixXd> &r_mat, vector<MatrixXd> &F_mat, vector<MatrixXd> &e_hat, vector<MatrixXd> &b_1, vector<MatrixXd>&c_1, float xi_d, float gamma_1, float gamma_2){
+    for(int k=0; k < r_mat.size(); k++){
+      MatrixXd term1=r_mat[k].array().exp();
+      b_1[k]=xi_d*gamma_1*e_hat[k].cwiseProduct(term1);
+      MatrixXd term2=2.0*xi_d*gamma_2*e_hat[k].cwiseProduct(term1);
+      c_1[k]=term2.cwiseProduct(F_mat[k]);
+  }
+}
+
+void lambdaTilde1(vector<MatrixXd> &c_1, vector<MatrixXd> &lambda_tilde_1, MatrixXd &dummyMat, float xi_p, float lambda){
+	for(int k=0; k < c_1.size(); k++){
+		lambda_tilde_1[k] = lambda*dummyMat + (1/xi_p) * c_1[k];
+	}
+}
+
+void betaTilde1(vector<MatrixXd> &lambda_tilde_1, vector<MatrixXd> &beta_tilde_1, vector<MatrixXd> &b_1, vector<MatrixXd> &c_1, MatrixXd &beta_fM, float xi_p){
+	 for(int k=0; k < b_1.size(); k++){
+		 MatrixXd term1 = lambda_tilde_1[k].array().cwiseInverse();
+		 MatrixXd term2 = (1/xi_p)*(c_1[k].cwiseProduct(term1));
+		 MatrixXd term3 = (1.0/xi_p)*lambda_tilde_1[k].cwiseInverse();
+		 MatrixXd term4 = term3.cwiseProduct(b_1[k]);
+		 beta_tilde_1[k] = beta_fM - beta_fM.cwiseProduct(term2) - term4;
+	 }
+	
+}
+
+
+
+void I1(vector<MatrixXd> &a_1, MatrixXd &dummyMat, vector<MatrixXd> &lambda_tilde_1, vector<MatrixXd> &beta_tilde_1, vector<MatrixXd> &I_1,  float xi_p, float lambda, float beta_f ) {
+	for(int k=0; k < a_1.size(); k++){
+        MatrixXd term1 = a_1[k] - 0.5*log(lambda)*xi_p*dummyMat;
+        MatrixXd term2 = 0.5*xi_p*lambda_tilde_1[k].array().log();
+        MatrixXd term3 = 0.5*lambda*pow(beta_f,2)*xi_p*dummyMat;
+        MatrixXd term4 = xi_p*beta_tilde_1[k].array().square();
+        MatrixXd term5 = 0.5 * lambda_tilde_1[k].cwiseProduct(term4);
+        I_1[k] = term1 + term2 + term3 - term5;		
+	}
+	
+}
+
+
+
+void J1Witoute(vector<MatrixXd> &beta_tilde_1, vector<MatrixXd> &lambda_tilde_1, vector<MatrixXd>&F_mat, vector<MatrixXd>&r_mat, vector<MatrixXd>&J_1_without_e, float gamma_1, float gamma_2, float xi_d){
+	
+	for(int k=0; k < r_mat.size(); k++){
+		MatrixXd term1 = gamma_1*beta_tilde_1[k];
+		MatrixXd term2 = beta_tilde_1[k].array().square();
+		MatrixXd term3 =lambda_tilde_1[k].cwiseInverse();
+		MatrixXd term4 = term2 + term3;
+		MatrixXd term5 = gamma_2*F_mat[k].cwiseProduct(term4);
+		MatrixXd term6 = xi_d*(term1 + term5);
+		MatrixXd term7 = r_mat[k].array().exp();
+		J_1_without_e[k]=term6.cwiseProduct(term7);		
+		
+	}
+}
+
+void piTilde1(vector<MatrixXd> &pi_tilde_1, vector<MatrixXd> &I_1, float weight, float xi_p){
+	for(int k=0; k < I_1.size(); k++){
+		MatrixXd term1 = (-1/xi_p)*I_1[k];
+		pi_tilde_1[k] = weight*term1.array().exp();
+	}
+	
+}
+
+
+void I2fnc(vector<MatrixXd> &I_2, vector<MatrixXd> &scale_2, float xi_p){
+	for(int k = 0; k < I_2.size(); k++){
+		I_2[k] = -1 * xi_p * scale_2[k].array().log();
+	}
+}
 
 
 
