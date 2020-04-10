@@ -17,6 +17,7 @@ using namespace std;
 
 int main(int argc, char **argv) {
 	Eigen::initParallel();
+
 	time_t start, end;
 	time(&start);
 	ios_base::sync_with_stdio(false);
@@ -110,8 +111,8 @@ int main(int argc, char **argv) {
 	decltype(r_min) k_max = 18.0;
 
 	float hr = 0.05;
-	decltype(hr) ht = 25.0;
-	decltype(hr) hk = 0.15;
+	float ht = 25.0;
+	float hk = 0.15;
 
 	float rSize = r_max / hr + 1;
 	float FSize = F_max / ht + 1;
@@ -129,6 +130,11 @@ int main(int argc, char **argv) {
 	decltype(r_mat) F_mat;
 	decltype(r_mat) k_mat;
 	ndGrid(r, t, k, r_mat, F_mat, k_mat);
+	
+	int NZ = r_mat.size();
+	int NY = r_mat[0].rows();
+	int NX = r_mat[0].cols();
+	
 
 	const int quadrature = 1;
 	const int n = 30;
@@ -139,19 +145,19 @@ int main(int argc, char **argv) {
 
 	float dt = 0.3;
 
-	vector < MatrixXd > v0;
-	decltype(v0) v1_initial;
-	decltype(v0) out;
-	decltype(v0) vold;
-	decltype(v0) v0_dt;
-	decltype(v0) v0_dr;
-	decltype(v0) v0_dk;
-	decltype(v0) v0_dtt;
-	decltype(v0) v0_drr;
-	decltype(v0) v0_dkk;
-	decltype(v0) B1;
-	decltype(v0) e_hat;
-	decltype(v0) e;
+	vector <MatrixXd> v0(NZ);
+	decltype(v0) v1_initial(NZ);
+	decltype(v0) out(NZ);
+	decltype(v0) vold(NZ);
+	decltype(v0) v0_dt(NZ);
+	decltype(v0) v0_dr(NZ);
+	decltype(v0) v0_dk(NZ);
+	decltype(v0) v0_dtt(NZ);
+	decltype(v0) v0_drr(NZ);
+	decltype(v0) v0_dkk(NZ);
+	decltype(v0) B1(NZ);
+	decltype(v0) e_hat(NZ);
+	decltype(v0) e(NZ);
 
 	MatrixXd v0_dt_temp(r_mat[0].rows(), r_mat[0].cols());
 	v0_dt_temp.fill(0.0);
@@ -160,22 +166,21 @@ int main(int argc, char **argv) {
 	MatrixXd v0_dk_temp(r_mat[0].rows(), r_mat[0].cols());
 	v0_dk_temp.fill(0.0);
 
-#pragma omp parallal for
+    #pragma omp parallel for
 	for (int i = 0; i < r_mat.size(); i++) {
-		v0.push_back(
-				kappa * r_mat[i] + (1 - kappa) * k_mat[i] - beta_f * F_mat[i]);
-		v1_initial.push_back(v0[i]);
-		out.push_back(v0[i]);
-		vold.push_back(v0[i]);
-		v0_dt.push_back(v0_dt_temp);
-		v0_dr.push_back(v0_dr_temp);
-		v0_dk.push_back(v0_dr_temp);
-		v0_dtt.push_back(v0_dt_temp);
-		v0_drr.push_back(v0_dr_temp);
-		v0_dkk.push_back(v0_dk_temp);
-		B1.push_back(v0_dk_temp);
-		e_hat.push_back(v0_dk_temp);
-		e.push_back(v0_dk_temp);
+		v0[i]=kappa * r_mat[i] + (1 - kappa) * k_mat[i] - beta_f * F_mat[i];
+		v1_initial[i]=v0[i];
+		out[i]= v0[i];
+		vold[i]=v0[i];
+		v0_dt[i]=v0_dt_temp;
+		v0_dr[i]=v0_dr_temp;
+		v0_dk[i]=v0_dr_temp;
+		v0_dtt[i]=v0_dt_temp;
+		v0_drr[i]=v0_dr_temp;
+		v0_dkk[i]=v0_dk_temp;
+		B1[i]=v0_dk_temp;
+		e_hat[i]=v0_dk_temp;
+		e[i]=v0_dk_temp;
 	}
 	int iter = 1;
 	int j;
@@ -193,7 +198,10 @@ int main(int argc, char **argv) {
 
 	MatrixXd dummyMat(F_mat[0].rows(), F_mat[0].cols());
 	dummyMat.fill(1.0);
-	for (int i = 0; i < B1.size(); i++) {
+
+	#pragma omp parallel for	
+	for (int i = 0; i < B1.size(); i++) 
+	{
 		MatrixXd temp = beta_f * (F_mat[i]) - gamma_bar * dummyMat;
 		MatrixXd temp1 = temp.array().pow(power - 1);
 		MatrixXd comp = compMatrix(F_mat[i], bcomp, 1.0);
@@ -215,15 +223,16 @@ int main(int argc, char **argv) {
 		Acoeff.push_back(v0_dr_temp);
 	}
 
-	decltype(v0) Bcoeff;
-	decltype(v0) jtemp;
-	decltype(v0) i_k;
+	decltype(v0) Bcoeff(Acoeff.size());
+	decltype(v0) jtemp(Acoeff.size());
+	decltype(v0) i_k(Acoeff.size());
 
 	v0_dr_temp.fill(0.0);
+	#pragma omp parallel for
 	for (int i = 0; i < r_mat.size(); i++) {
-		Bcoeff.push_back(v0_dr_temp);
-		jtemp.push_back(v0_dr_temp);
-		i_k.push_back(v0_dr_temp);
+		Bcoeff[i]=v0_dr_temp;
+		jtemp[i]=v0_dr_temp;
+		i_k[i] = v0_dr_temp;
 	}
 	float Ccoeff = -alpha - 1. / phi_1;
 	for (int k = 0; k < Bcoeff.size(); k++) {

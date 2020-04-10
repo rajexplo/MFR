@@ -87,7 +87,7 @@ void lambdaTilde1(vector<MatrixXd> &c_1, vector<MatrixXd> &lambda_tilde_1, Matri
 void betaTilde1(vector<MatrixXd> &lambda_tilde_1, vector<MatrixXd> &beta_tilde_1, vector<MatrixXd> &b_1, vector<MatrixXd> &c_1, MatrixXd &beta_fM, float xi_p);
 void I1(vector<MatrixXd> &a_1, MatrixXd &dummyMat, vector<MatrixXd> &lambda_tilde_1,  vector<MatrixXd> &beta_tilde_1, vector<MatrixXd> &I_1,  float xi_p, float lambda, float beta_f );
 void J1Witoute(vector<MatrixXd> &beta_tilde_1, vector<MatrixXd> &lambda_tilde_1, vector<MatrixXd>&F_mat, vector<MatrixXd>&r_mat, vector<MatrixXd>&J_1_without_e, float gamma_1, float gamma_2, float xi_d);
-void piTilde1(vector<MatrixXd> &pi_tilde_1, vector<MatrixXd> &I_1, float weight, float xi_p);
-void I2fnc(vector<MatrixXd> &I_2, vector<MatrixXd> &scale_2, float xi_p);
+ void  piTilde1(vector<MatrixXd> &pi_tilde_1, vector<MatrixXd> &I_1, float weight, float xi_p);
+void  I2fnc(vector<MatrixXd> &I_2, vector<MatrixXd> &scale_2, float xi_p);
 
 #endif

@@ -372,7 +372,7 @@ while lhs_error > tol % check for convergence
         +gamma_2.*F_mat.*(beta_tilde_1.^2+1./lambda_tilde_1)).*exp(r_mat) ;
 
     pi_tilde_1 = weight.*exp(-1./xi_p.*I_1);
-toc
+
 
     scale_2_fnc = @(x) exp(-1./xi_p.*xi_d.*(gamma_1.*x ...
         +gamma_2.*x.^2.*F_mat ...
@@ -389,6 +389,7 @@ toc
         +gamma_2_plus.*x.*(x.*F_mat-gamma_bar).^(power-1).*((x.*F_mat-gamma_bar)>=0)) ...
         .*normpdf(x,beta_f,sqrt(var_beta_f));
     J_2_without_e = quad_int(J_2_without_e_fnc, [a], [b], n,'legendre');
+    toc
    %%start here
     J_2_with_e = J_2_without_e.*e_hat;   
     R_2 = 1./xi_p.*(I_2 - J_2_with_e);
