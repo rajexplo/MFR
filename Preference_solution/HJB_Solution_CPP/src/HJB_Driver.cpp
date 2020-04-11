@@ -16,10 +16,10 @@ using namespace std;
  */
 
 int main(int argc, char **argv) {
-	//Eigen::initParallel();
+	Eigen::initParallel();
 
 	time_t start, end;
-	time(&start);
+	
 	ios_base::sync_with_stdio(false);
 	int ambiguity = 1;
 	int damage_level = 1;
@@ -520,9 +520,12 @@ int main(int argc, char **argv) {
 	lhs_err.push_back(maxVecErr(out_comp, v1_initial, 1.0));
 
 	cout << "lhs_err is " << lhs_err[iter-1] << endl;
-	vold = v0;
+	
 
-	while (((lhs_err[iter-1] - tol) > EPS)) {		
+	while (((lhs_err[iter-1] - tol) > EPS)) {
+		
+		time(&start);
+			
    // while (iter < 5) {
 		vold = v0;			
 				
@@ -563,17 +566,11 @@ int main(int argc, char **argv) {
 		Cf.col(2) = C_kkf;
 		
 		v_0f = flatMat(v0);					
-		
-		rf = flatMat(r_mat);
-	    Ff = flatMat(F_mat);
-	    kf = flatMat(k_mat);
-	
-	    stateSpace.col(0) = rf;
-	    stateSpace.col(1) = Ff;
-	    stateSpace.col(2) = kf;
+		  
 	 		   	
-	   	VectorXd sol1 = solveCG(stateSpace, Aftemp, Bf, Cf, Dftemp, v_0ftemp, dt );							
-		mat3Dresize(out_comp, sol1, out_comp.size(), nrows, ncols, element);
+	   	sol = solveCG(stateSpace, Aftemp, Bf, Cf, Dftemp, v_0ftemp, dt );	
+							
+		mat3Dresize(out_comp, sol, out_comp.size(), nrows, ncols, element);
 		
 		float err = maxVecErr(out_comp, vold, 1.0);
 		
@@ -583,10 +580,7 @@ int main(int argc, char **argv) {
 		
 		
 		v0 = out_comp;
-		
-		//cout << "Cf at CG " << Cf.col(1)<< endl; 
-		
-		
+				
 		v0dt(v0_dt, v0, ht);
 		v0dr(v0_dr, v0, hr);
 		v0dk(v0_dk, v0, hk);
@@ -667,15 +661,19 @@ int main(int argc, char **argv) {
 		
 		
 		if (weight == 0 || weight == 1) {
+              #pragma omp parallel for
 			for (int k = 0; k < RE.size(); k++) {
 				RE[k] = R_1[k].cwiseProduct(pi_tilde_1_norm[k])
 						+ R_2[k].cwiseProduct(pi_tilde_2_norm[k]);
 				RE_total[k] = 1.0 * xi_p * RE[k];
 			}
 		} else {
+			MatrixXd temp1;
+			MatrixXd temp2;
+			#pragma omp parallel for private(temp1, temp2)
 			for (int k = 0; k < RE.size(); k++) {
-				MatrixXd temp1 = ((1.0 / weight) * pi_tilde_1_norm[k]).array().log();
-				MatrixXd temp2 =((1.0 / (1.0 - weight)) * pi_tilde_2_norm[k]).array().log();
+					temp1 = ((1.0 / weight) * pi_tilde_1_norm[k]).array().log();
+					temp2 =((1.0 / (1.0 - weight)) * pi_tilde_2_norm[k]).array().log();
 				RE[k] = pi_tilde_1_norm[k].cwiseProduct(R_1[k])
 						+ pi_tilde_2_norm[k].cwiseProduct(R_2[k])
 						+ pi_tilde_1_norm[k].cwiseProduct(temp1)
@@ -710,6 +708,7 @@ int main(int argc, char **argv) {
 		
 		
 		
+#pragma omp parallel for
 		for (int k = 0; k < pde_error.size(); k++) {
 			pde_error_new[k] = A[k].cwiseProduct(v0[k]) + B_r[k].cwiseProduct(v0_dr[k])
 					+ B_t[k].cwiseProduct(v0_dt[k]) + B_k[k].cwiseProduct(v0_dk[k])
@@ -730,8 +729,8 @@ int main(int argc, char **argv) {
 		if ((lhs_err[iter-1]-tol) < EPS){
 			cout << "PDE Converges" << endl;
 		}
-	
-		time(&end);
+	    
+		time(&end);			
 		double time_taken = double(end - start);
 		cout << "Time taken by New program is : " << fixed << time_taken
 				<< setprecision(5);
