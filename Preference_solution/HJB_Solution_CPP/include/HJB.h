@@ -41,16 +41,6 @@ typedef struct foo{
   float var_beta_f;
   }dataGen;
 
-typedef struct foo1{
-  MatrixXd A;
-  MatrixXd B;
-  MatrixXd C;
-  MatrixXd D;
-  MatrixXd v0;
-  float dt;
-}modelData;
-
-
 
 
 VectorXd csvread(char *filename);
@@ -66,12 +56,12 @@ vector<MatrixXd> q2_tilde_fnc(dataGen* intData, vector<MatrixXd>& scale_2, float
 vector<MatrixXd> quad_int_J2(dataGen* intData, vector<MatrixXd> &scale_quad, const float a, const float b, const int n);
 
 VectorXd flatMat(vector <MatrixXd> &F_mat);
-VectorXd solveCG(MatrixXd &preLoadMat, modelData* model);
-
+//VectorXd solveCG(MatrixXd &preLoadMat, modelData* model);
+VectorXd solveCG(MatrixXd &preLoadMat, MatrixXd& A, MatrixXd& B, MatrixXd &C, MatrixXd &D, MatrixXd& v0, float dt );
 double maxVec(vector<MatrixXd> &mat1);
 
 double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd> & Mat2, float eta);
-void mat3Dresize(vector <MatrixXd> &out_comp, VectorXd &sol, const int nz, const int nrows, const int ncols, const int element);
+void mat3Dresize(vector <MatrixXd> &out_comp, VectorXd &sol, int nz,  int nrows,  int ncols,  int element);
 void v0dt(vector <MatrixXd> &v0_dt, vector<MatrixXd> &v0, float ht);
 void v0dr(vector <MatrixXd> &v0_dr, vector<MatrixXd> &v0, float hr);
 void v0dk(vector <MatrixXd> &v0_dk, vector<MatrixXd> &v0, float hk);

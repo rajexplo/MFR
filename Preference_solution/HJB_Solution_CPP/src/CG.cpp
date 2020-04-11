@@ -223,19 +223,11 @@ matList.push_back(T(i, i + 2*state_vars.increVec(n), - dt * ( secondCoefE / pow(
 }
 
 
-VectorXd solveCG(MatrixXd &preLoadMat, modelData* model){
+VectorXd solveCG(MatrixXd &preLoadMat, MatrixXd& A, MatrixXd& B, MatrixXd &C, MatrixXd &D, MatrixXd& v0, float dt ){
 
   stateVars stateSpace(preLoadMat);
-  linearSysVars linearSys_vars(stateSpace, model->A, model->B, model->C, model->D, model->dt);
-  linearSys_vars.constructMat(stateSpace);
-  MatrixXd A =  model->A;
-  MatrixXd B =  model->B;
-  MatrixXd C =  model->C;
-  MatrixXd D =  model->D;
-  MatrixXd v0 = model->v0;
-  float dt = model->dt;
-
-  
+  linearSysVars linearSys_vars(stateSpace, A, B, C, D, dt);
+  linearSys_vars.constructMat(stateSpace); 
   VectorXd v1;
   v1.resize(stateSpace.S, 1);
   v1 = v0; // smart guess

@@ -413,14 +413,14 @@ mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     cgE.setMaxIterations(10000);
     cgE.setTolerance( 0.0000000001 );
     cgE.compute(linearSys_vars.Le);
-    mexPrintf("Rows: %3i% \n",linearSys_vars.Le.rows());
-    mexPrintf("Cols: %3i% \n",linearSys_vars.Le.cols());
+    //mexPrintf("Rows: %3i% \n",linearSys_vars.Le.rows());
+    //mexPrintf("Cols: %3i% \n",linearSys_vars.Le.cols());
     XiEVector = cgE.solveWithGuess(v0,v1);
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds> (stop-start);
     mexPrintf("CONJUGATE GRADIENT TOOK (number of iterations): %3i% \n",  cgE.iterations() );
     mexPrintf("CONJUGATE GRADIENT error: %6f% \n",  cgE.error() );
-    mexPrintf("Time taken by CG Solver: %6f% microseconds \n", duration.count());
+    //mexPrintf("Time taken by CG Solver: %6f% microseconds \n", duration.count());
     mexEvalString("drawnow;");
     v1 = XiEVector;
     

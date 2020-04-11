@@ -1,16 +1,12 @@
 %%%%% This file generates results for the Consumption Damage model.
 % Authors: Mike Barnett, Jieyao Wang
 % Last update: Dec 9, 2019
-
 close all
 clear all
 clc
-%profile on;
-tic
 
 %% Step 0: Set up solver
 mex solveCGNatural.cpp;
-
 
 %% Step 1: Specify ambiguity and damage level
 
@@ -74,7 +70,7 @@ xi_d = -1.*(1-kappa);
 bar_gamma_2_plus = weight.*0+(1-weight).*gamma_2_plus;
 
 
-%%% Step 3: Solve HJB
+%% Step 3: Solve HJB
 r_min = 0;
 r_max = 9; %r = logR
 F_min = 0;
@@ -97,7 +93,7 @@ a = beta_f-5.*sqrt(var_beta_f);
 b = beta_f+5.*sqrt(var_beta_f);
 
 tol = 1e-8; % tol
-dt = 0.3; % epsilon
+dt = 0.3 % epsilon
 v0 = (kappa).*r_mat+(1-kappa).*k_mat-beta_f.*F_mat; % initial guess
 v1_initial = v0.*ones(size(r_mat));
 out = v0;
@@ -109,10 +105,8 @@ v0 = reshape(out,size(v0));
 
 v0_dt = zeros(size(v0));
 v0_dt(:,2:end-1,:) = (1./(2.*ht)).*(v0(:,3:end,:)-v0(:,1:end-2,:));
-
 v0_dt(:,end,:) = (1./ht).*(v0(:,end,:)-v0(:,end-1,:));
 v0_dt(:,1,:) = (1./ht).*(v0(:,2,:)-v0(:,1,:));
-
 
 v0_dr = zeros(size(v0));
 v0_dr(2:end-1,:,:) = (1./(2.*hr)).*(v0(3:end,:,:)-v0(1:end-2,:,:));
@@ -141,7 +135,7 @@ v0_dkk(:,:,2:end-1) = (1./(hk.^2)).*(v0(:,:,3:end)+v0(:,:,1:end-2)-2.*v0(:,:,2:e
 v0_dkk(:,:,end) = (1./(hk.^2)).*(v0(:,:,end)+v0(:,:,end-2)-2.*v0(:,:,end-1));
 v0_dkk(:,:,1) = (1./(hk.^2)).*(v0(:,:,3)+v0(:,:,1)-2.*v0(:,:,2));
 
-
+% FOC
 B1 = v0_dr-xi_d.*(gamma_1(1)+gamma_2(1)*(F_mat).*beta_f+gamma_2_plus(1).*(F_mat.*beta_f-gamma_bar).^(power-1).*(F_mat>=(crit./beta_f))) ...
     .*beta_f.*exp(r_mat)-v0_dt.*exp(r_mat);  
 C1 = -delta.*kappa;
@@ -149,7 +143,6 @@ e = -C1./B1;
 e_hat = e;
 
 Acoeff = ones(size(r_mat));
-
 Bcoeff = ((delta.*(1-kappa).*phi_1+phi_0.*phi_1.*v0_dk).*delta.*(1-kappa)./(v0_dr.*psi_0.*0.5)...
     .*exp(0.5.*(r_mat-k_mat)))./(delta.*(1-kappa).*phi_1);
 Ccoeff = -alpha - 1./phi_1;
@@ -162,39 +155,32 @@ b_1 = xi_d.*e_hat.*exp(r_mat).*gamma_1;
 c_1 = 2.*xi_d.*e_hat.*exp(r_mat).*F_mat.*gamma_2;
 lambda_tilde_1 = lambda+c_1./xi_p;
 beta_tilde_1 = beta_f-c_1./xi_p./lambda_tilde_1.*beta_f-1./xi_p./lambda_tilde_1.*b_1;
-
 I_1 = a_1-0.5.*log(lambda).*xi_p + 0.5.*log(lambda_tilde_1).*xi_p ...
     +0.5.*lambda.*beta_f.^2.*xi_p -0.5.*lambda_tilde_1.*(beta_tilde_1).^2.*xi_p;
-
 J_1_without_e = xi_d.*(gamma_1.*beta_tilde_1 ...
     +gamma_2.*F_mat.*(beta_tilde_1.^2+1./lambda_tilde_1)).*exp(r_mat) ;
-
 pi_tilde_1 = weight.*exp(-1./xi_p.*I_1);
 
 scale_2_fnc = @(x) exp(-1./xi_p.*xi_d.*(gamma_1.*x ...
     +gamma_2.*x.^2.*F_mat ...
     +gamma_2_plus.*x.*(x.*F_mat-gamma_bar).^(power-1).*((x.*F_mat-gamma_bar)>=0)).*exp(r_mat).*e_hat) ...
     .*normpdf(x,beta_f,sqrt(var_beta_f));
-
 scale_2 = quad_int(scale_2_fnc, [a], [b], n, 'legendre'); % quadrature
-
 q2_tilde_fnc = @(x) exp(-1./xi_p.*xi_d.*(gamma_1.*x ...
     +gamma_2.*x.^2.*F_mat ...
     +gamma_2_plus.*x.*(x.*F_mat-gamma_bar).^(power-1).*((x.*F_mat-gamma_bar)>=0)).*exp(r_mat).*e_hat)./scale_2;
 I_2 = -1.*xi_p.*log(scale_2);
-
 J_2_without_e_fnc = @(x) xi_d.*exp(r_mat).*...
     q2_tilde_fnc(x) ...
     .*(gamma_1.*x +gamma_2.*F_mat.*x.^2 ...
     +gamma_2_plus.*x.*(x.*F_mat-gamma_bar).^(power-1).*((x.*F_mat-gamma_bar)>=0)) ...
     .*normpdf(x,beta_f,sqrt(var_beta_f));
-
 J_2_without_e = quad_int(J_2_without_e_fnc, [a], [b], n,'legendre'); % quadrature
 J_2_with_e = J_2_without_e.*e_hat;
 pi_tilde_2 = (1-weight).*exp(-1./xi_p.*I_2);
 pi_tilde_1_norm = pi_tilde_1./(pi_tilde_1+pi_tilde_2);
 pi_tilde_2_norm = 1-pi_tilde_1_norm;  
-  
+    
 expec_e_sum = (pi_tilde_1_norm.*(J_1_without_e) ...
     +pi_tilde_2_norm.*(J_2_without_e));
 B1 = v0_dr-v0_dt.*exp(r_mat)-expec_e_sum;  
@@ -208,11 +194,7 @@ I_term = -1.*xi_p.*log(pi_tilde_1+pi_tilde_2);
 R_1 = 1./xi_p.*(I_1 - J_1);     
 R_2 = 1./xi_p.*(I_2 - J_2);
 drift_distort = (pi_tilde_1_norm.*J_1 ...
-    +pi_tilde_2_norm.*J_2); 
-
-
-
-
+    +pi_tilde_2_norm.*J_2);   
 if (weight == 0 || weight == 1)
     RE = pi_tilde_1_norm.*R_1 + pi_tilde_2_norm.*R_2;
 else
@@ -224,8 +206,7 @@ RE_total = 1.*xi_p.*RE;
 
 % inputs for solver
 A = -delta.*ones(size(r_mat));
-%B_r = j;% psi_0.*(j.^psi_1);%.*exp(psi_1.*(k_mat-r_mat));%-0.5.*(sigma_r.^2);
-B_r = -e_star + psi_0.*(j.^psi_1).*exp(psi_1.*(k_mat-r_mat))-0.5.*(sigma_r.^2);
+B_r = -e_star+psi_0.*(j.^psi_1).*exp(psi_1.*(k_mat-r_mat))-0.5.*(sigma_r.^2);
 B_k = mu_k+phi_0.*log(1+i_k.*phi_1)-0.5.*(sigma_k.^2);
 B_t = e_star.*exp(r_mat);
 C_rr = 0.5.*sigma_r.^2.*ones(size(r_mat));
@@ -244,12 +225,11 @@ model.C    = [C_rr(:), C_tt(:), C_kk(:)];
 model.D    = D(:);
 model.v0   = v0(:);
 model.dt   = dt;
-% toc
-% %%% Start Here
-% tic
+
+
 out = solveCGNatural(stateSpace, model);
 out_comp = reshape(out,size(v0)).*ones(size(r_mat));
-  
+    
 disp(['Error: ', num2str(max(max(max(abs(out_comp - v1_initial)))))])
 v0 = v0.*ones(size(v0));
 v0 = reshape(out,size(v0));
@@ -263,9 +243,8 @@ lhs_error = max(max(max(abs(out_comp - v1_initial))));
 lhs_err(iter) = lhs_error;
 
 
-
 while lhs_error > tol % check for convergence
-   %tic
+   tic
    vold = v0 .* ones(size(v0));
    
    if iter > 2000
@@ -282,7 +261,8 @@ while lhs_error > tol % check for convergence
     model.D    = D(:);
     model.v0   = v0(:);
     model.dt   = dt;
-    out = solveCGNatural(stateSpace, model);   
+    
+    out = solveCGNatural(stateSpace, model);
     out_comp = reshape(out,size(v0)).*ones(size(r_mat));
 
     iter = iter+1;
@@ -290,7 +270,6 @@ while lhs_error > tol % check for convergence
 
     v0 = v0.*ones(size(v0));
     v0 = reshape(out,size(v0));
-
 
     if (mod(iter, 100) == 0)
         save([ambiguity,'_',damage_level]); % save HJB solution
@@ -337,8 +316,6 @@ while lhs_error > tol % check for convergence
 
     Converged = 0;
     nums = 0;
-    %%Finish till monday!
-    
     while Converged == 0
         istar = (phi_0.*phi_1.*v0_dk./q - 1)./phi_1;
         jstar = (q.*exp(psi_1.*(r_mat-k_mat))./((v0_dr).*psi_0.*psi_1)).^(1./(psi_1 - 1));
@@ -359,7 +336,6 @@ while lhs_error > tol % check for convergence
         nums = nums+1;
     end
 
-   %%%% Start Here
     a_1 = zeros(size(r_mat));
     b_1 = xi_d.*e_hat.*exp(r_mat).*gamma_1;
     c_1 = 2.*xi_d.*e_hat.*exp(r_mat).*F_mat.*gamma_2;
@@ -389,8 +365,6 @@ while lhs_error > tol % check for convergence
         +gamma_2_plus.*x.*(x.*F_mat-gamma_bar).^(power-1).*((x.*F_mat-gamma_bar)>=0)) ...
         .*normpdf(x,beta_f,sqrt(var_beta_f));
     J_2_without_e = quad_int(J_2_without_e_fnc, [a], [b], n,'legendre');
-    toc
-   %%start here
     J_2_with_e = J_2_without_e.*e_hat;   
     R_2 = 1./xi_p.*(I_2 - J_2_with_e);
     pi_tilde_2 = (1-weight).*exp(-1./xi_p.*I_2);
@@ -447,12 +421,11 @@ while lhs_error > tol % check for convergence
         fprintf('PDE Converges');
     end
 
-    %toc
+    toc
 end
 
 save([ambiguity,'_',damage_level]); % save HJB solution
 
-% Stop Tmorrow's target
 %% Step 4: Simulation
 
 T = 100; % 100 years

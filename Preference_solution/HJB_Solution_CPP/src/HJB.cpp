@@ -1,9 +1,9 @@
 #include "HJB.h"
-#pragma GCC optimize("O3","unroll-loops","omit-frame-pointer","inline") //Optimization flags
-#pragma GCC option("arch=native","tune=native","no-zero-upper") //Enable AVX
-#pragma GCC target("avx")  //Enable AVX
-#include <x86intrin.h> //AVX/SSE Extensions
-#include <bits/stdc++.h> //All main STD libraries
+//#pragma GCC optimize("O3","unroll-loops","omit-frame-pointer","inline") //Optimization flags
+//#pragma GCC option("arch=native","tune=native","no-zero-upper") //Enable AVX
+//#pragma GCC target("avx")  //Enable AVX
+//#include <x86intrin.h> //AVX/SSE Extensions
+//#include <bits/stdc++.h> //All main STD libraries
 
 
 using namespace Eigen;
@@ -319,7 +319,7 @@ vector<MatrixXd> quad_int(dataGen* intData, const float a, const float b, const 
   
   float temp;
   int i, j;
-  #pragma omp prallel for private(temp, scale_2_temp, j)
+  //#pragma omp prallel for private(temp, scale_2_temp, j)
   for(i=0; i < n; i++){
     temp = (((b-a)/2)*x[i] + (a+b)/2);
     scale_2_temp=scale_2_fnc(intData, temp);
@@ -328,7 +328,7 @@ vector<MatrixXd> quad_int(dataGen* intData, const float a, const float b, const 
      }
   }
 
-#pragma omp prallel for
+  //#pragma omp prallel for
   for (int j =0; j < scale_2.size(); j++){
     scale_2[j]= 0.5*(b-a)*scale_2[j];
   }
@@ -387,7 +387,7 @@ vector<MatrixXd> quad_int_J2(dataGen* intData, vector<MatrixXd> &scale_quad, con
   //quadRead(x, w, str);
   float temp;
   int i, j;
-  #pragma omp prallel for private(temp, scale_2_temp, j)
+  //#pragma omp prallel for private(temp, scale_2_temp, j)
   for(i=0; i < n; i++){
     temp = (((b-a)/2)*x[i] + (a+b)/2);
     scale_2_temp=J_2_without_e_fnc(intData, scale_quad, temp);
@@ -395,7 +395,7 @@ vector<MatrixXd> quad_int_J2(dataGen* intData, vector<MatrixXd> &scale_quad, con
         scale_2[j]=scale_2[j] + w[i]*scale_2_temp[j];
      }
   }
-#pragma omp parallel for
+  //#pragma omp parallel for
   for (auto j =0; j < scale_2.size(); j++){
     scale_2[j]= 0.5*(b-a)*scale_2[j];
   }
@@ -432,7 +432,7 @@ double maxVec(vector<MatrixXd> & errMat){
   return maxVal;
 }
 
-double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd> & Mat2, float eta){
+double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd>&Mat2, float eta){
   int nz = Mat1.size();
   double maxVal;
   vector<MatrixXd> matErr(nz);
@@ -443,7 +443,7 @@ double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd> & Mat2, float eta){
   return maxVal;
 }
 
-void mat3Dresize(vector <MatrixXd> &out_comp, VectorXd &sol, const int nz, const int nrows, const int ncols, const int element){
+void mat3Dresize(vector <MatrixXd> &out_comp, VectorXd &sol, int nz, int nrows, int ncols, int element){
      for(int k=0; k < nz; k++){
       MatrixXd temp = sol.segment(element*k, element);
       temp.resize(nrows, ncols);
