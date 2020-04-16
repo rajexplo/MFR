@@ -7,8 +7,8 @@ LIBDIR  =
 #CXX     =  g++-9 -std=c++17 -fopenmp -ffast-math -fopt-info-vec-optimized 
 #LD      =  g++-9 -std=c++17 -fopenmp -ffast-math -fopt-info-vec-optimized
 
-CXX     =  g++-9 -std=c++17 -fopenmp -ffast-math  
-LD      =  g++-9 -std=c++17 -fopenmp -ffast-math  
+CXX     =  g++ -std=c++17 -fopenmp -ffast-math  
+LD      =  g++ -std=c++17 -fopenmp -ffast-math  
 
 
 
