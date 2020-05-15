@@ -2,10 +2,9 @@
 
 #SBATCH --job-name=HJB_Solver
 #SBATCH --error=job_%j.err
-#SBATCH --qos=stafftest
 #SBATCH --output=job_%j.out
 #SBATCH --partition=broadwl
-#SBATCH --time=02:00:00
+#SBATCH --time=04:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
