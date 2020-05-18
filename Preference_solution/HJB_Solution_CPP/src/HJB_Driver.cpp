@@ -526,7 +526,6 @@ int main(int argc, char **argv) {
 		
 		time(&start);
 			
-   // while (iter < 5) {
 		vold = v0;			
 				
 		if (iter > 2000) {
