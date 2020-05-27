@@ -16,7 +16,7 @@ using namespace std;
  */
 
 int main(int argc, char **argv) {
-	Eigen::initParallel();
+	//Eigen::initParallel();
 
 	time_t start, end;
 	
@@ -113,9 +113,9 @@ int main(int argc, char **argv) {
 	float ht = 50.0;//25.0;
 	float hk = 0.5;//0.15;
 */
-	float hr = 0.05;
-	float ht = 25.0;
-	float hk = 0.15;
+	float hr = 0.5;
+	float ht = 100.0;
+	float hk = 0.5;
 
 	float rSize = r_max / hr + 1;
 	float FSize = F_max / ht + 1;
@@ -660,7 +660,7 @@ int main(int argc, char **argv) {
 		
 		
 		if (weight == 0 || weight == 1) {
-              #pragma omp parallel for
+            //#pragma omp parallel for
 			for (int k = 0; k < RE.size(); k++) {
 				RE[k] = R_1[k].cwiseProduct(pi_tilde_1_norm[k])
 						+ R_2[k].cwiseProduct(pi_tilde_2_norm[k]);
@@ -669,7 +669,7 @@ int main(int argc, char **argv) {
 		} else {
 			MatrixXd temp1;
 			MatrixXd temp2;
-			#pragma omp parallel for private(temp1, temp2)
+			//#pragma omp parallel for private(temp1, temp2)
 			for (int k = 0; k < RE.size(); k++) {
 					temp1 = ((1.0 / weight) * pi_tilde_1_norm[k]).array().log();
 					temp2 =((1.0 / (1.0 - weight)) * pi_tilde_2_norm[k]).array().log();
@@ -707,7 +707,7 @@ int main(int argc, char **argv) {
 		
 		
 		
-#pragma omp parallel for
+//#pragma omp parallel for
 		for (int k = 0; k < pde_error.size(); k++) {
 			pde_error_new[k] = A[k].cwiseProduct(v0[k]) + B_r[k].cwiseProduct(v0_dr[k])
 					+ B_t[k].cwiseProduct(v0_dt[k]) + B_k[k].cwiseProduct(v0_dk[k])

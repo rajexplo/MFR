@@ -1,126 +1,38 @@
-CONJUGATE GRADIENT TOOK (number of iterations):116
-CONJUGATE GRADIENT error:8.7706e-11
-lhs_err is 0.0824783
-CONJUGATE GRADIENT TOOK (number of iterations):115
-CONJUGATE GRADIENT error:9.9591e-11
-Diff : 0.0790208
+CONJUGATE GRADIENT TOOK (number of iterations):16
+CONJUGATE GRADIENT error:3.23486e-11
+lhs_err is 0.0824633
+CONJUGATE GRADIENT TOOK (number of iterations):16
+CONJUGATE GRADIENT error:3.09657e-11
+Diff : 0.0789923
 Iteration:  2
-PDE Error:  0.286196
-Change in PDE Error:  0.301851
-Time taken by New program is : 37.000000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):77
+PDE Error:  0.286197
+Change in PDE Error:  0.301907
+Time taken by New program is : 0.000000 sec 
+CONJUGATE GRADIENT TOOK (number of iterations):12
 CONJUGATE GRADIENT error:0.00000
-Diff : 0.02493
+Diff : 0.02496
 Iteration:  3
-PDE Error:  0.08450
-Change in PDE Error:  0.00139
-Time taken by New program is : 17.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):77
+PDE Error:  0.08456
+Change in PDE Error:  0.00137
+Time taken by New program is : 0.00000 sec 
+CONJUGATE GRADIENT TOOK (number of iterations):12
 CONJUGATE GRADIENT error:0.00000
-Diff : 0.02454
+Diff : 0.02457
 Iteration:  4
-PDE Error:  0.08312
-Change in PDE Error:  0.00131
-Time taken by New program is : 18.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):77
+PDE Error:  0.08319
+Change in PDE Error:  0.00130
+Time taken by New program is : 0.00000 sec 
+CONJUGATE GRADIENT TOOK (number of iterations):12
 CONJUGATE GRADIENT error:0.00000
-Diff : 0.02417
+Diff : 0.02420
 Iteration:  5
-PDE Error:  0.08180
-Change in PDE Error:  0.00124
-Time taken by New program is : 17.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
+PDE Error:  0.08190
+Change in PDE Error:  0.21313
+Time taken by New program is : 0.00000 sec 
+CONJUGATE GRADIENT TOOK (number of iterations):0
 CONJUGATE GRADIENT error:0.00000
-Diff : 0.02381
+Diff : 17.67457
 Iteration:  6
-PDE Error:  0.08056
-Change in PDE Error:  0.00118
-Time taken by New program is : 18.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02348
-Iteration:  7
-PDE Error:  0.07937
-Change in PDE Error:  0.00112
-Time taken by New program is : 18.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02315
-Iteration:  8
-PDE Error:  0.07825
-Change in PDE Error:  0.00107
-Time taken by New program is : 20.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02285
-Iteration:  9
-PDE Error:  0.07718
-Change in PDE Error:  0.00102
-Time taken by New program is : 18.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02255
-Iteration:  10
-PDE Error:  0.07616
-Change in PDE Error:  0.00098
-Time taken by New program is : 18.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02227
-Iteration:  11
-PDE Error:  0.07518
-Change in PDE Error:  0.00094
-Time taken by New program is : 18.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02200
-Iteration:  12
-PDE Error:  0.07424
-Change in PDE Error:  0.00090
-Time taken by New program is : 19.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02174
-Iteration:  13
-PDE Error:  0.07334
-Change in PDE Error:  0.00086
-Time taken by New program is : 19.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02149
-Iteration:  14
-PDE Error:  0.07247
-Change in PDE Error:  0.00083
-Time taken by New program is : 19.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02125
-Iteration:  15
-PDE Error:  0.07164
-Change in PDE Error:  0.00080
-Time taken by New program is : 20.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02102
-Iteration:  16
-PDE Error:  0.07084
-Change in PDE Error:  0.00077
-Time taken by New program is : 20.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02080
-Iteration:  17
-PDE Error:  0.07007
-Change in PDE Error:  0.00075
-Time taken by New program is : 19.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02058
-Iteration:  18
-PDE Error:  0.06932
-Change in PDE Error:  0.00072
-Time taken by New program is : 18.00000 sec 
-CONJUGATE GRADIENT TOOK (number of iterations):76
-CONJUGATE GRADIENT error:0.00000
-Diff : 0.02037
-Iteration:  19
+PDE Error:  0.22774
+Change in PDE Error:  0.36155
+Time taken by New program is : 0.00000 sec 

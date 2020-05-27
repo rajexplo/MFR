@@ -1,9 +1,9 @@
 #include "HJB.h"
-#pragma GCC optimize("O3","unroll-loops","omit-frame-pointer","inline") //Optimization flags
-#pragma GCC option("arch=native","tune=native","no-zero-upper") //Enable AVX
-#pragma GCC target("avx")  //Enable AVX
-#include <x86intrin.h> //AVX/SSE Extensions
-#include <bits/stdc++.h> //All main STD libraries
+//#pragma GCC optimize("O3","unroll-loops","omit-frame-pointer","inline") //Optimization flags
+//#pragma GCC option("arch=native","tune=native","no-zero-upper") //Enable AVX
+//#pragma GCC target("avx")  //Enable AVX
+//#include <x86intrin.h> //AVX/SSE Extensions
+//#include <bits/stdc++.h> //All main STD libraries
 
 
 using namespace Eigen;
@@ -319,7 +319,7 @@ vector<MatrixXd> quad_int(dataGen* intData, const float a, const float b, const 
   
   float temp;
   int i, j;
-#pragma omp prallel for private(temp, scale_2_temp, j)
+//#pragma omp prallel for private(temp, scale_2_temp, j)
   for(i=0; i < n; i++){
     temp = (((b-a)/2)*x[i] + (a+b)/2);
     scale_2_temp=scale_2_fnc(intData, temp);
@@ -328,7 +328,7 @@ vector<MatrixXd> quad_int(dataGen* intData, const float a, const float b, const 
      }
   }
 
-#pragma omp prallel for
+//#pragma omp prallel for
   for (int j =0; j < scale_2.size(); j++){
     scale_2[j]= 0.5*(b-a)*scale_2[j];
   }
@@ -387,7 +387,7 @@ vector<MatrixXd> quad_int_J2(dataGen* intData, vector<MatrixXd> &scale_quad, con
   //quadRead(x, w, str);
   float temp;
   int i, j;
-#pragma omp prallel for private(temp, scale_2_temp, j)
+//#pragma omp prallel for private(temp, scale_2_temp, j)
   for(i=0; i < n; i++){
     temp = (((b-a)/2)*x[i] + (a+b)/2);
     scale_2_temp=J_2_without_e_fnc(intData, scale_quad, temp);
@@ -395,7 +395,7 @@ vector<MatrixXd> quad_int_J2(dataGen* intData, vector<MatrixXd> &scale_quad, con
         scale_2[j]=scale_2[j] + w[i]*scale_2_temp[j];
      }
   }
-#pragma omp parallel for
+//#pragma omp parallel for
   for (auto j =0; j < scale_2.size(); j++){
     scale_2[j]= 0.5*(b-a)*scale_2[j];
   }
@@ -551,7 +551,7 @@ void J1Witoute(vector<MatrixXd> &beta_tilde_1, vector<MatrixXd> &lambda_tilde_1,
 void  piTilde1(vector<MatrixXd> &pi_tilde_1, vector<MatrixXd> &I_1, float weight, float xi_p){
 	MatrixXd term1;
 	int k;
-#pragma omp parallel for private(term1)
+//#pragma omp parallel for private(term1)
 	for(k=0; k < I_1.size(); k++){
 		term1 = (-1/xi_p)*I_1[k];
 		pi_tilde_1[k] = weight*term1.array().exp();
@@ -562,7 +562,7 @@ void  piTilde1(vector<MatrixXd> &pi_tilde_1, vector<MatrixXd> &I_1, float weight
 
  void  I2fnc(vector<MatrixXd> &I_2, vector<MatrixXd> &scale_2, float xi_p){
 	 int k;
-	#pragma omp parallel for
+	//#pragma omp parallel for
 	for(k = 0; k < I_2.size(); k++){
 		I_2[k] = -1 * xi_p * scale_2[k].array().log();
 	}
