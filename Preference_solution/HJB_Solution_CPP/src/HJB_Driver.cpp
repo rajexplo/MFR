@@ -539,7 +539,7 @@ int main(int argc, char **argv) {
     
 
 
-	while (((lhs_err[iter] - tol) > EPS) && iter < 8) {
+	while ((lhs_err[iter] - tol) > EPS) {
 		
 		time(&start);
 			
