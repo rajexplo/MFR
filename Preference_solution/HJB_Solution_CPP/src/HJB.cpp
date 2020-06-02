@@ -227,7 +227,7 @@ float normpdf(float x, float mu, float sigma){
 
 MatrixXd compMatrix(MatrixXd &mat, float comFactor, float coeff){
   MatrixXd matC(mat.rows(), mat.cols());
-   
+  matC.fill(0.0);   
   for(int i=0; i < mat.rows(); i++){
     for(int j=0; j < mat.cols(); j++){
       if ((coeff*mat(i,j) - comFactor) >= EPS){
@@ -250,17 +250,22 @@ vector<MatrixXd> scale_2_fnc(dataGen* intData, float x){
 
     for(int k=0; k < f_out.size(); k++){
 
-      MatrixXd term1 = intData->gamma_1*x*dummyMat + intData->gamma_2* pow(x, 2)*intData->F_mat[k];
+         MatrixXd term1 = intData->gamma_1*x*dummyMat + intData->gamma_2* pow(x, 2)*intData->F_mat[k];
          MatrixXd term2 = x*intData->F_mat[k] - intData->gamma_bar*dummyMat;
          MatrixXd term3 = intData->gamma_2_plus*x*term2.array().pow(intData->power-1);
          MatrixXd term4 = compMatrix(term2, 0.0, 1.0);
+         
          MatrixXd term5 = term3.cwiseProduct(term4);
          MatrixXd term6 = intData->r_mat[k].array().exp();
+                  
+         
          MatrixXd term7 = term6.cwiseProduct(intData->e_hat[k]);
+
          MatrixXd term8 = (-1/intData->xi_p)*intData->xi_d*(term1 + term5);
          MatrixXd term9 = term8.cwiseProduct(term7);
-	 MatrixXd term10 = term9.array().exp();	 
-        f_out[k] = normpdf(x, intData->beta_f, sqrt(intData->var_beta_f))*term10;
+         MatrixXd term10 = term9.array().exp();	 
+         
+         f_out[k] = normpdf(x, intData->beta_f, sqrt(intData->var_beta_f))*term10;
   }
     return f_out;
 
@@ -306,21 +311,17 @@ vector<MatrixXd> quad_int(dataGen* intData, const float a, const float b, const 
       v0_dt_temp.fill(0.0);
 	  for (int i=0; i < intData->F_mat.size(); i++){
 		  scale_2.push_back(v0_dt_temp);
+          
 	  }
 
   VectorXd x(n), w(n); 
   quad_points_legendre(x, w, n);
   
-  //char str[1000]= "/Users/eklavya/WORK_RAJ/MFR/Preference_solution/HJB_Solution_CPP/quad_points_legendre/leg_30.txt";
-  
-  //quadRead(x, w, str);
-  //cout << "x" << x << endl;
-  //cout << "w" << w << endl;
   
   float temp;
   int i, j;
-//#pragma omp prallel for private(temp, scale_2_temp, j)
-  for(i=0; i < n; i++){
+  
+for(i=0; i < n; i++){
     temp = (((b-a)/2)*x[i] + (a+b)/2);
     scale_2_temp=scale_2_fnc(intData, temp);
     for (j =0; j < scale_2.size(); j++){
@@ -328,10 +329,10 @@ vector<MatrixXd> quad_int(dataGen* intData, const float a, const float b, const 
      }
   }
 
-//#pragma omp prallel for
   for (int j =0; j < scale_2.size(); j++){
     scale_2[j]= 0.5*(b-a)*scale_2[j];
   }
+  
   return scale_2;
 
 }

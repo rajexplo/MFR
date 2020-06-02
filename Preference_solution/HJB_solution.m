@@ -78,9 +78,14 @@ F_max = 4000;
 k_min = 0;
 k_max = 18; %k = logK
 
-hr = 0.05;
-ht = 25;
-hk = 0.15;
+% hr = 0.05;
+% ht = 25;
+% hk = 0.15;
+
+hr = 2;
+ht = 2000;
+hk = 9;
+
 
 r = r_min:hr:r_max;
 t = F_min:ht:F_max;
@@ -243,7 +248,7 @@ lhs_error = max(max(max(abs(out_comp - v1_initial))));
 lhs_err(iter) = lhs_error;
 
 
-while lhs_error > tol % check for convergence
+while ((lhs_error > tol) && iter < 8) % check for convergence
    tic
    vold = v0 .* ones(size(v0));
    
@@ -412,6 +417,7 @@ while lhs_error > tol % check for convergence
     disp(['PDE Error: ', num2str(max(max(max(abs(pde_error)))))]) % check equation
     disp(['Change in pde error: ', num2str(diff_pde_error)]);
     pde_error = pde_error_new;
+    
     
     rhs_err(iter) = max(max(max(abs(pde_error_new))));
     lhs_error = max(max(max(abs(out_comp - vold))));

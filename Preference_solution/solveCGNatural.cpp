@@ -322,9 +322,9 @@ mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     int nRows = mxGetM(prhs[0]); int nCols = mxGetN(prhs[0]);
     Eigen::Map<Eigen::MatrixXd> preLoadMat((double *)mxGetPr(prhs[0]),nRows,nCols);
-    mexPrintf("Preload Rows : %3i% and Cols: %3i% \n",  nRows, nCols);
+    //mexPrintf("Preload Rows : %3i% and Cols: %3i% \n",  nRows, nCols);
    
-    mexEvalString("drawnow;");
+    //mexEvalString("drawnow;");
     
     
     stateVars stateSpace(preLoadMat);    
@@ -342,9 +342,9 @@ mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxValue = mxGetField(prhs[1], 0, "B");      
     nRows = mxGetM(mxValue); nCols = mxGetN(mxValue);
     Eigen::Map<Eigen::MatrixXd> B((double *)mxGetPr(mxValue),nRows,nCols);
-    mexPrintf("B Rows : %3i% \n",  A.rows());
-    mexPrintf("B Cols : %3i% \n",  A.cols());
-    mexEvalString("drawnow;");
+    //mexPrintf("B Rows : %3i% \n",  A.rows());
+    //mexPrintf("B Cols : %3i% \n",  A.cols());
+    //mexEvalString("drawnow;");
 
     
     mxValue = mxGetField(prhs[1], 0, "C");      
@@ -369,9 +369,9 @@ mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     Eigen::VectorXd v1;
     v1.resize(stateSpace.S, stateSpace.N);
-    mexPrintf("S Rows : %3i% \n",  stateSpace.S);
-    mexPrintf("N Cols : %3i% \n",  stateSpace.N);
-    mexEvalString("drawnow;");
+    //mexPrintf("S Rows : %3i% \n",  stateSpace.S);
+    //mexPrintf("N Cols : %3i% \n",  stateSpace.N);
+    //mexEvalString("drawnow;");
 
     
     v1 = v0; // smart guess
