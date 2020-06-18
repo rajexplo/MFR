@@ -129,7 +129,8 @@ int main(int argc, char **argv) {
 	r.setLinSpaced(ceil(rSize), r_min, r_max-1);
 	t.setLinSpaced(ceil(FSize), F_min, F_max);
 	k.setLinSpaced(ceil(kSize), k_min, k_max);
-    
+   
+    //Fix the ndGrid distribution!!    
 	vector < MatrixXd > r_mat;
 	decltype(r_mat) F_mat;
 	decltype(r_mat) k_mat;
