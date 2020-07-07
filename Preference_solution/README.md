@@ -15,5 +15,4 @@ To generate paper results, first set up the solvers (see instructions for solver
 
 ## Codes in C++
 The folder HJB_Solution_CPP contains the code for Prefernce solution in C++. The folder is self contained.
-doing ```make``` will compile the code and will generate an exec ```HJB_Solver```.
-Doing ./HJB_Solver will run the code.  
+By running ```./job.sh```  the job will start running on midway2.
