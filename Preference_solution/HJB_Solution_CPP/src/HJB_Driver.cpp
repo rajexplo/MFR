@@ -113,22 +113,22 @@ int main(int argc, char **argv) {
 	float ht = 50.0;//25.0;
 	float hk = 0.5;//0.15;
 */
-	float hr = 2;
-	float ht = 2000.0;
-	float hk = 9.0;
+	float hr = 0.05;
+	float ht = 25.0;
+	float hk = 0.15;
 
-	float rSize = r_max / hr;
-	float FSize = F_max / ht +1 ;
-	float kSize = ((k_max - k_min) / hk) +1 ;
+        int rSize = ceil(((r_max - r_min) / hr)) + 1 ;
+        int FSize = ceil(((F_max - F_min) / ht)) + 1 ;
+        int kSize = ceil(((k_max - k_min) / hk)) + 1 ;
 
 	int Converged = 0;
 	int nums = 0;
 
 	VectorXd r, t, k;
 
-	r.setLinSpaced(ceil(rSize), r_min, r_max-1);
-	t.setLinSpaced(ceil(FSize), F_min, F_max);
-	k.setLinSpaced(ceil(kSize), k_min, k_max);
+	r.setLinSpaced(rSize, r_min, r_max);
+	t.setLinSpaced(FSize, F_min, F_max);
+	k.setLinSpaced(kSize, k_min, k_max);
    
     //Fix the ndGrid distribution!!    
 	vector < MatrixXd > r_mat;
@@ -514,7 +514,6 @@ int main(int argc, char **argv) {
 	float diff_pde_error = 1.0;
 
 	for (int k = 0; k < pde_error.size(); k++) {
-        cout << "Size is " << pde_error.size() << endl;
 		pde_error[k] = A[k].cwiseProduct(v0[k]) + B_r[k].cwiseProduct(v0_dr[k])
 				+ B_t[k].cwiseProduct(v0_dt[k]) + B_k[k].cwiseProduct(v0_dk[k])
 				+ C_rr[k].cwiseProduct(v0_drr[k])
@@ -702,11 +701,11 @@ int main(int argc, char **argv) {
 			
 		
 		for (int k = 0; k < r_mat.size(); k++) {
-			A.push_back(-delta * dummyMat);
+			A[k]=-delta * dummyMat;
 			MatrixXd temp0 = psi_0 * (jtemp[k].array().pow(psi_1));
 			MatrixXd temp1 = (psi_1 * (k_mat[k] - r_mat[k])).array().exp();
 			MatrixXd temp2 = (dummyMat + phi_1 * i_k[k]).array().log();
-		    B_r[k] = -e_star[k] + temp1.cwiseProduct(temp0)- 0.5 * (pow(sigma_r, 2)) * dummyMat;
+		        B_r[k] = -e_star[k] + temp1.cwiseProduct(temp0)- 0.5 * (pow(sigma_r, 2)) * dummyMat;
 			B_k[k] = mu_k * dummyMat + phi_0 * (temp2) - coff * dummyMat;
 			temp0 = r_mat[k].array().exp();
 			B_t[k] = e_star[k].cwiseProduct(temp0);
