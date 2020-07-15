@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
-
+#SBATCH --qos=stafftest
 module load gcc/9.2.0
 
 export OMP_NUM_THREADS=8

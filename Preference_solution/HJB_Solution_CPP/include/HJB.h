@@ -80,4 +80,7 @@ void J1Witoute(vector<MatrixXd> &beta_tilde_1, vector<MatrixXd> &lambda_tilde_1,
  void  piTilde1(vector<MatrixXd> &pi_tilde_1, vector<MatrixXd> &I_1, float weight, float xi_p);
 void  I2fnc(vector<MatrixXd> &I_2, vector<MatrixXd> &scale_2, float xi_p);
 
+//Simulation Part
+vector<MatrixXd> base_model_drift_fnc(dataGen* intData, vector<MatrixXd> &e, float bar_gamma_2_plus, float x);
+vector<MatrixXd> quad_int_bmdf(dataGen* intData, vector<MatrixXd> &e, float bar_gamma_2_plus, const float a, const float b, const int n);
 #endif

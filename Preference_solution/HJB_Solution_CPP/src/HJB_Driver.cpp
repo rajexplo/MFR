@@ -109,10 +109,10 @@ int main(int argc, char **argv) {
 	decltype(r_min) k_min = 0.0;
 	decltype(r_min) k_max = 18.0;
 
-	/*float hr =0.1;//0.05;
-	float ht = 50.0;//25.0;
-	float hk = 0.5;//0.15;
-*/
+	//float hr =0.1;//0.05;
+	//float ht = 50.0;//25.0;
+	//float hk = 0.5;//0.15;
+
 	float hr = 0.05;
 	float ht = 25.0;
 	float hk = 0.15;
@@ -164,6 +164,8 @@ int main(int argc, char **argv) {
 	decltype(v0) B1(NZ);
 	decltype(v0) e_hat(NZ);
 	decltype(v0) e(NZ);
+        //Simulation part
+        decltype(v0) base_model_drift(NZ);
 
 	MatrixXd v0_dt_temp(NX, NY);
 	v0_dt_temp.fill(0.0);
@@ -187,9 +189,10 @@ int main(int argc, char **argv) {
 		B1[i]=v0_dk_temp;
 		e_hat[i]=v0_dk_temp;
 		e[i]=v0_dk_temp;
+                base_model_drift[i]=v0_dk_temp;
 	}
 	
-    int iter = 0;
+        int iter = 0;
 
 	v0dt(v0_dt, v0, ht);
 	v0dr(v0_dr, v0, hr);
@@ -381,26 +384,22 @@ int main(int argc, char **argv) {
 	intData->var_beta_f = var_beta_f;
 	vector<MatrixXd> scale_2;
 	scale_2 = quad_int(intData, a, b, n);
-   
-    I2fnc(I_2, scale_2, xi_p);
-
-	vector<MatrixXd> J_2_without_e = quad_int_J2(intData, scale_2, a, b, n);
-
+    	I2fnc(I_2, scale_2, xi_p);
+        vector<MatrixXd> J_2_without_e = quad_int_J2(intData, scale_2, a, b, n);
 	for (int k = 0; k < J_2_with_e.size(); k++) {
 		J_2_with_e[k] = J_2_without_e[k].cwiseProduct(e_hat[k]);
 		pi_tilde_2[k] = (1 - weight) * (-1 / xi_p * I_2[k]).array().exp();
 		pi_tilde_1_norm[k] = pi_tilde_1[k].cwiseProduct(
 				(pi_tilde_1[k] + pi_tilde_2[k]).cwiseInverse());
 		
-        pi_tilde_2_norm[k] = 1.0 * dummyMat - pi_tilde_1_norm[k];
+        	pi_tilde_2_norm[k] = 1.0 * dummyMat - pi_tilde_1_norm[k];
 		expec_e_sum[k] = pi_tilde_1_norm[k].cwiseProduct(J_1_without_e[k])
 				+ pi_tilde_2_norm[k].cwiseProduct(J_2_without_e[k]);
-		
 		MatrixXd temp = r_mat[k].array().exp();
 		B1[k] = v0_dr[k]- v0_dt[k].cwiseProduct(temp)- expec_e_sum[k];
-        C1 = -delta * kappa;
+                C1 = -delta * kappa;
 		e[k] = -C1 * B1[k].cwiseInverse();
-        e_star[k] = e[k];
+                e_star[k] = e[k];
 		J_1[k] = J_1_without_e[k].cwiseProduct(e_star[k]);
 		J_2[k] = J_2_without_e[k].cwiseProduct(e_star[k]);
 		I_term[k] = -1.0 * xi_p * (pi_tilde_1[k] + pi_tilde_2[k]).array().log();
@@ -477,8 +476,6 @@ int main(int argc, char **argv) {
 	MatrixXd Dftemp(Map < MatrixXd > (D_f.data(), D_f.rows(), D_f.cols()));
 	VectorXd v_0f = flatMat(v0);
 	MatrixXd v_0ftemp(Map < MatrixXd > (v_0f.data(), v_0f.rows(), v_0f.cols()));
-
-	
 
 	Bf.col(0) = B_rf;
 	Bf.col(1) = B_tf;
@@ -640,8 +637,6 @@ int main(int argc, char **argv) {
 				gamma_1, gamma_2, xi_d);
 		piTilde1(pi_tilde_1, I_1, weight, xi_p);
 		
-		
-		
 		scale_2 = quad_int(intData, a, b, n);
 		I2fnc(I_2, scale_2, xi_p);		
 		
@@ -754,6 +749,11 @@ int main(int argc, char **argv) {
 		cout << " sec " << endl;
 			
 	}
+
+    // Simulation part
+       //base_model_drift=quad_int_bmdf(intData, e, bar_gamma_2_plus, a, b, n);
+      
+       
 
 }
 
