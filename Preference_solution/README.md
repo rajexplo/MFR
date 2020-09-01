@@ -14,5 +14,8 @@ This directory contains code used to solve the model in the case of consumption 
 To generate paper results, first set up the solvers (see instructions for solvers). Next run items 1-3 above in sequence. Users can specify alternative ambiguity and damage levels in item 1. Refer back to the notebook for further details.
 
 ## Codes in C++
+The ```src``` folder contain all the source codes. The include folder contains the interface files with for code.
+
+
 The folder HJB_Solution_CPP contains the code for Prefernce solution in C++. The folder is self contained.
 By running ```./job.sh```  the job will start running on midway2.
