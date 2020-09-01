@@ -142,7 +142,6 @@ int main(int argc, char **argv) {
 	int NZ = r_mat.size();
 	int NX = r_mat[0].rows();
 	int NY = r_mat[0].cols();
-    cout << "NX is " << NX << "NY is " << NY << "NZ is " << NZ << endl;	
 	const int n = 30;
 	float a = beta_f - 5.0 * sqrt(var_beta_f);
 	float b = beta_f + 5.0 * sqrt(var_beta_f);
