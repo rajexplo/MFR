@@ -70,7 +70,7 @@ void v0dtt(vector<MatrixXd> &v0_dtt, vector<MatrixXd> &v0, float ht);
 void v0drr(vector<MatrixXd> &v0_drr, vector<MatrixXd> &v0, float hr);
 void v0dkk(vector<MatrixXd> &v0_dkk, vector<MatrixXd> &v0, float hk);
 void iStar(vector<MatrixXd> &v0_dk, vector<MatrixXd> &q, vector<MatrixXd> &istar, float phi_0, float phi_1, MatrixXd& dummyMat);
-void jStar(vector<MatrixXd>& v0_dr, vector<MatrixXd>&r_mat, vector<MatrixXd>& k_mat, vector<MatrixXd>&q, vector<MatrixXd>& jstar, float psi_0, float psi_1);
+void jStar(vector<MatrixXd>& v0_dr, vector<MatrixXd>&r_mat, vector<MatrixXd>& k_mat, vector<MatrixXd>&q, vector<MatrixXd>& jstar, double psi_0, double psi_1);
 void qStar(vector<MatrixXd> &istar, vector<MatrixXd> &jstar, vector<MatrixXd> &q, vector<MatrixXd> &qstar, MatrixXd &dummyMat, float eta, float delta, float kappa, float alpha);
 void b1c1(vector<MatrixXd> &r_mat, vector<MatrixXd> &F_mat, vector<MatrixXd> &e_hat, vector<MatrixXd> &b_1, vector<MatrixXd>&c_1, float xi_d, float gamma_1, float gamma_2);
 void lambdaTilde1(vector<MatrixXd> &c_1, vector<MatrixXd> &lambda_tilde_1, MatrixXd &dummyMat, float xi_p, float lambda);

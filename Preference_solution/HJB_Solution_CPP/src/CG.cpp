@@ -234,7 +234,7 @@ VectorXd solveCG(MatrixXd &preLoadMat, MatrixXd& A, MatrixXd& B, MatrixXd &C, Ma
   v0 = v0.array() + dt * D.array(); // transform v0 into rhs
   // saveMarket(v0,"rhs.dat");
   //saveMarket(v1,"v1.dat");
-  for (int i = 0; i < stateSpace.S; ++i) {
+  /*for (int i = 0; i < stateSpace.S; ++i) {
 
         for (int n = (stateSpace.N - 1); n >=0; --n ) {
             
@@ -245,7 +245,7 @@ VectorXd solveCG(MatrixXd &preLoadMat, MatrixXd& A, MatrixXd& B, MatrixXd &C, Ma
              //v0(i) = 0.0001;            
             }
         }
-    }
+    }*/
 
   Eigen::VectorXd XiEVector;
   //saveMarket(linearSys_vars.Le,"System.dat");
@@ -260,7 +260,6 @@ VectorXd solveCG(MatrixXd &preLoadMat, MatrixXd& A, MatrixXd& B, MatrixXd &C, Ma
   v1 = XiEVector;
   cout << "CONJUGATE GRADIENT TOOK (number of iterations):" << cgE.iterations() << endl;
   cout << "CONJUGATE GRADIENT error:" << cgE.error() << endl;
-    
   return v1;
 }
          

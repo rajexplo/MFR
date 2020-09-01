@@ -20,16 +20,6 @@ VectorXd csvread(char* filename){
 				if(!(iss>>xval)){break;}
 				v.push_back(xval/1000); 
 		 }
-       // DEBUG FLAG
-       #if 0
-		 for(auto it=v.begin(); it != v.end(); it++){
-			 cout << *it << endl;
-		
-		 }
-		 int sz=v.size();
-		 cout << "sz is " << sz << endl;
-       #endif
-         
      
 		 Eigen::Map<Eigen::VectorXd>McD(v.data(),v.size()); 
          return McD;
@@ -143,23 +133,24 @@ void ndGrid(VectorXd r, VectorXd t, VectorXd k, vector<MatrixXd> &r_mat, vector<
 }
 
 void v0dt(vector <MatrixXd> &v0_dt, vector<MatrixXd> &v0, float ht){
-	int j;
-	for(int k=0; k < v0_dt.size(); k++){
+	int j,k;
+    //#pragma omp parallel for private(k, j)
+	for(k=0; k < v0_dt.size(); k++){
 		for( j=1; j< v0_dt[0].cols()-1; j++){
 			v0_dt[k].col(j)= (1.0/(2.0*ht))*(v0[k].col(j+1)-v0[k].col(j-1));
       }
 	  v0_dt[k].col(j)=(1.0/ht)*(v0[k].col(j)-v0[k].col(j-1));
 	  v0_dt[k].col(0)=(1.0/ht)*(v0[k].col(1)-v0[k].col(0));
     }
-
 }
 
 
 
 
 void v0dr(vector <MatrixXd> &v0_dr, vector<MatrixXd> &v0, float hr){
-	int j;
-    for(int k=0; k < v0_dr.size(); k++){
+	int j, k;
+    //#pragma omp parallel for private(k, j)
+    for(k=0; k < v0_dr.size(); k++){
      for(j=1; j< v0_dr[0].rows()-1; j++){
        v0_dr[k].row(j)= (1.0/(2.0*hr))*(v0[k].row(j+1)-v0[k].row(j-1));
       }
@@ -170,20 +161,20 @@ void v0dr(vector <MatrixXd> &v0_dr, vector<MatrixXd> &v0, float hr){
 
 
 void v0dk(vector <MatrixXd> &v0_dk, vector<MatrixXd> &v0, float hk){
-    int j;
-	for( int k=1; k < v0_dk.size()-1; k++){
+    int k;
+    //#pragma omp parallel for private(k, j)
+	for( k=1; k < v0_dk.size()-1; k++){
       v0_dk[k] = (1/(2*hk))*(v0[k+1]-v0[k-1]);
-      j=k;
     }
-    v0_dk[j+1] = (1/hk)*(v0[j+1]-v0[j]);
+    v0_dk[k] = (1/hk)*(v0[k]-v0[k-1]);
     v0_dk[0] = (1/hk)*(v0[1]-v0[0]);
 }
 
 void v0dtt(vector<MatrixXd> &v0_dtt, vector<MatrixXd> &v0, float ht){
-	int j;
-    for(int k=0; k < v0_dtt.size(); k++){
+	int j,k;
+    //#pragma omp parallel for private(k, j)
+    for(k=0; k < v0_dtt.size(); k++){
       for(j=1; j< v0_dtt[0].cols()-1; j++){
-       
         v0_dtt[k].col(j)= (1.0/(ht*ht))*(v0[k].col(j+1) + v0[k].col(j-1)-2*v0[k].col(j));
        }
       v0_dtt[k].col(j)=(1.0/(ht*ht))*(v0[k].col(j) + v0[k].col(j-2) - 2 * v0[k].col(j-1) );
@@ -192,8 +183,9 @@ void v0dtt(vector<MatrixXd> &v0_dtt, vector<MatrixXd> &v0, float ht){
  }
  
  void v0drr(vector<MatrixXd> &v0_drr, vector<MatrixXd> &v0, float hr){
-	 int j;
-     for(int k=0; k < v0_drr.size(); k++){
+	 int j, k;
+     //#pragma omp parallel for private(k, j)
+     for(k=0; k < v0_drr.size(); k++){
       for(j=1; j< v0_drr[0].rows()-1; j++){
         v0_drr[k].row(j)= (1.0/(hr*hr))*(v0[k].row(j+1) + v0[k].row(j-1) - 2*v0[k].row(j));
        }
@@ -204,18 +196,15 @@ void v0dtt(vector<MatrixXd> &v0_dtt, vector<MatrixXd> &v0, float ht){
  
  
 void v0dkk(vector<MatrixXd> &v0_dkk, vector<MatrixXd> &v0, float hk){
-	 int j;
-     for( int k=1; k < v0_dkk.size()-1; k++){
+	 int j, k;
+     //#pragma omp parallel for private(k, j)
+     for( k=1; k < v0_dkk.size()-1; k++){
        v0_dkk[k] = (1/(hk*hk))*(v0[k+1] + v0[k-1] - 2.0* v0[k]);
        j=k;
      }
-     v0_dkk[j+1] = (1/(hk*hk))*(v0[j+1] + v0[j-1]-2*v0[j]);
-     v0_dkk[0] = (1/(hk*hk))*(v0[2] + v0[0]-2.0*v0[1]);
+     v0_dkk[k] = (1/(hk*hk))*(v0[k] + v0[k-2]-  2.0*v0[k-1]);
+     v0_dkk[0] = (1/(hk*hk))*(v0[2] + v0[0]  -  2.0*v0[1]);
 }
-
-
-
-
 
 float normpdf(float x, float mu, float sigma){
   float y;
@@ -227,9 +216,11 @@ float normpdf(float x, float mu, float sigma){
 
 MatrixXd compMatrix(MatrixXd &mat, float comFactor, float coeff){
   MatrixXd matC(mat.rows(), mat.cols());
-  matC.fill(0.0);   
-  for(int i=0; i < mat.rows(); i++){
-    for(int j=0; j < mat.cols(); j++){
+  matC.fill(0.0); 
+  int i, j; 
+  //#pragma omp parallel for private(i,j) 
+  for(i=0; i < mat.rows(); i++){
+    for(j=0; j < mat.cols(); j++){
       if ((coeff*mat(i,j) - comFactor) >= EPS){
 	  matC(i,j)=1;
 	}
@@ -250,8 +241,8 @@ vector<MatrixXd> scale_2_fnc(dataGen* intData, float x){
 
     for(int k=0; k < f_out.size(); k++){
 
-         MatrixXd term1 = intData->gamma_1*x*dummyMat + intData->gamma_2* pow(x, 2)*intData->F_mat[k];
-         MatrixXd term2 = x*intData->F_mat[k] - intData->gamma_bar*dummyMat;
+         MatrixXd term1 = intData->gamma_1*x + intData->gamma_2* pow(x, 2)*(intData->F_mat[k]).array();
+         MatrixXd term2 = x*(intData->F_mat[k]).array() - intData->gamma_bar;
          MatrixXd term3 = intData->gamma_2_plus*x*term2.array().pow(intData->power-1);
          MatrixXd term4 = compMatrix(term2, 0.0, 1.0);
          MatrixXd term5 = term3.cwiseProduct(term4);
@@ -279,8 +270,8 @@ vector<MatrixXd> q2_tilde_fnc(dataGen* intData, vector<MatrixXd>& scale_2, float
 
     for(int k=0; k < f_out.size(); k++){
 
-      MatrixXd term1 = intData->gamma_1*x*dummyMat + intData->gamma_2* pow(x, 2)*intData->F_mat[k];
-         MatrixXd term2 = x*intData->F_mat[k] - intData->gamma_bar*dummyMat;
+      MatrixXd term1 = intData->gamma_1*x + intData->gamma_2* pow(x, 2)*(intData->F_mat[k]).array();
+         MatrixXd term2 = x*(intData->F_mat[k]).array() - intData->gamma_bar;
          MatrixXd term3 = intData->gamma_2_plus*x*term2.array().pow(intData->power-1);
          MatrixXd term4 = compMatrix(term2, 0.0, 1.0);
          MatrixXd term5 = term3.cwiseProduct(term4);
@@ -288,9 +279,9 @@ vector<MatrixXd> q2_tilde_fnc(dataGen* intData, vector<MatrixXd>& scale_2, float
          MatrixXd term7 = term6.cwiseProduct(intData->e_hat[k]);
          MatrixXd term8 = (-1/intData->xi_p)*intData->xi_d*(term1 + term5);
          MatrixXd term9 = term8.cwiseProduct(term7);
-	 MatrixXd term10 = term9.array().exp();
-	 MatrixXd term11 = scale_2[k].cwiseInverse();
-	 f_out[k] = term10.cwiseProduct(term11);
+	     MatrixXd term10 = term9.array().exp();
+	     MatrixXd term11 = scale_2[k].cwiseInverse();
+	     f_out[k] = term10.cwiseProduct(term11);
   }
     return f_out;
 
@@ -346,13 +337,12 @@ vector<MatrixXd> J_2_without_e_fnc(dataGen* intData, vector<MatrixXd> &scale_2, 
     g_out=q2_tilde_fnc(intData, scale_2, x);
 
     for(int k=0; k < f_out.size(); k++){
-      MatrixXd term0 = intData->xi_d*dummyMat;
       MatrixXd term1 = intData->r_mat[k].array().exp();
       MatrixXd term2 = g_out[k].cwiseProduct(term1);
-      MatrixXd term3 = term2.cwiseProduct(term0);
-      term0 = term3;
-      term1 = intData->gamma_1*x*dummyMat + intData->gamma_2* pow(x, 2)*intData->F_mat[k];
-      term2 = x*intData->F_mat[k] - intData->gamma_bar*dummyMat;
+      MatrixXd term3 = (intData->xi_d)*term2;
+      MatrixXd term0 = term3;
+      term1 = intData->gamma_1*x + intData->gamma_2* pow(x, 2)*(intData->F_mat[k]).array();
+      term2 = x*(intData->F_mat[k]).array() - intData->gamma_bar;
       term3 = intData->gamma_2_plus*x*term2.array().pow(intData->power-1);
       MatrixXd term4 = compMatrix(term2, 0.0, 1.0);
       MatrixXd term5 = term1 + term3.cwiseProduct(term4);
@@ -433,7 +423,7 @@ double maxVecErr(vector<MatrixXd> & Mat1, vector<MatrixXd>&Mat2, float eta){
   double maxVal;
   vector<MatrixXd> matErr(nz);
   for (int k=0; k < nz; k++){
-    matErr[k] =(1.0/eta)*(Mat1[k] - Mat2[k]);
+    matErr[k] =(1.0/eta)*(Mat1[k].array() - Mat2[k].array());
   }
   maxVal=maxVec(matErr);
   return maxVal;
@@ -450,17 +440,17 @@ void mat3Dresize(vector <MatrixXd> &out_comp, VectorXd &sol, int nz, int nrows, 
 
 void iStar(vector<MatrixXd> &v0_dk, vector<MatrixXd> &q, vector<MatrixXd> &istar, float phi_0, float phi_1, MatrixXd& dummyMat){
 	for(int k=0; k < v0_dk.size(); k++){	
-		istar[k] = (1.0/phi_1)*(phi_0 * phi_1*v0_dk[k].cwiseProduct(q[k].cwiseInverse())-1*dummyMat);		
+		istar[k] = (1.0/phi_1)*(phi_0 * phi_1*(v0_dk[k].cwiseProduct(q[k].cwiseInverse())).array()-1.0);		
 	}
 	
 }
 
-void jStar(vector<MatrixXd> &v0_dr, vector<MatrixXd> &r_mat, vector<MatrixXd> &k_mat, vector<MatrixXd> &q, vector<MatrixXd> &jstar, float psi_0, float psi_1){
+void jStar(vector<MatrixXd> &v0_dr, vector<MatrixXd> &r_mat, vector<MatrixXd> &k_mat, vector<MatrixXd> &q, vector<MatrixXd> &jstar, double psi_0, double psi_1){
 	for(int k=0; k < v0_dr.size(); k++){			
 		MatrixXd term1 = (psi_1*(r_mat[k] - k_mat[k])).array().exp();
 		MatrixXd term2 = term1.cwiseProduct(q[k]);
 		MatrixXd term3 = psi_0*psi_1*v0_dr[k];
-		float temp = 1.0/(psi_1-1);
+		double temp = 1.0/(psi_1-1);
 		MatrixXd term4 = term2.cwiseProduct(term3.cwiseInverse()); 	
 		jstar[k] = term4.array().pow(temp);
 	}	
@@ -474,15 +464,19 @@ void qStar(vector<MatrixXd> &istar, vector<MatrixXd> &jstar, vector<MatrixXd> &q
 		aStar[k] = istar[k] + jstar[k];		
 	}	
 	
-	double maxVal=maxVec(aStar);
+	//double maxVal=maxVec(aStar);
 	for(int k=0; k < istar.size(); k++){
-		if((alpha-maxVal) > EPS){
-			MatrixXd temp= (alpha*dummyMat-istar[k]-jstar[k]);
-			qstar[k] = eta*delta *(1-kappa)*temp.cwiseInverse() + +(1-eta)*q[k];
+       for (int i=0; i < istar[0].rows(); i++){
+         for (int j=0; j < istar[0].cols(); j++){
+		 if((alpha-(aStar[k](i,j))) > EPS){
+			MatrixXd temp= (alpha-(istar[k]).array()-(jstar[k]).array());
+			qstar[k] = eta*delta *(1-kappa)*temp.cwiseInverse() + (1-eta)*q[k];
 		}
 		else{
 			qstar[k] = 2.0*q[k];						
-		}				
+		}
+     }
+    }				
 	}	
 	
 }
@@ -517,12 +511,12 @@ void betaTilde1(vector<MatrixXd> &lambda_tilde_1, vector<MatrixXd> &beta_tilde_1
 
 void I1(vector<MatrixXd> &a_1, MatrixXd &dummyMat, vector<MatrixXd> &lambda_tilde_1, vector<MatrixXd> &beta_tilde_1, vector<MatrixXd> &I_1,  float xi_p, float lambda, float beta_f ) {
 	for(int k=0; k < a_1.size(); k++){
-        MatrixXd term1 = a_1[k] - 0.5*log(lambda)*xi_p*dummyMat;
+        MatrixXd term1 = a_1[k].array() - 0.5*log(lambda)*xi_p;
         MatrixXd term2 = 0.5*xi_p*lambda_tilde_1[k].array().log();
-        MatrixXd term3 = 0.5*lambda*pow(beta_f,2)*xi_p*dummyMat;
+        float term3 = 0.5*lambda*pow(beta_f,2)*xi_p;
         MatrixXd term4 = xi_p*beta_tilde_1[k].array().square();
         MatrixXd term5 = 0.5 * lambda_tilde_1[k].cwiseProduct(term4);
-        I_1[k] = term1 + term2 + term3 - term5;		
+        I_1[k] = term1.array() + term2.array() + term3 - term5.array();		
 	}
 	
 }
@@ -579,8 +573,8 @@ vector<MatrixXd> base_model_drift_fnc(dataGen* intData, vector<MatrixXd> &e, flo
     }
 
     for(int k=0; k < f_out.size(); k++){
-         MatrixXd term1 = intData->gamma_1*x*dummyMat + intData->gamma_2* pow(x, 2)*intData->F_mat[k];
-         MatrixXd term2 = x*intData->F_mat[k] - intData->gamma_bar*dummyMat;
+         MatrixXd term1 = intData->gamma_1*x + intData->gamma_2* pow(x, 2)*(intData->F_mat[k]).array();
+         MatrixXd term2 = x*(intData->F_mat[k]).array() - intData->gamma_bar;
          MatrixXd term3 = bar_gamma_2_plus*x*term2.array().pow(intData->power-1);
          MatrixXd term4 = compMatrix(term2, 0.0, 1.0);
          MatrixXd term5 = term3.cwiseProduct(term4);

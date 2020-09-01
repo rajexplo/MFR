@@ -5,10 +5,10 @@ close all
 clear all
 clc
 
-%% Step 0: Set up solver
+%%% Step 0: Set up solver
 mex solveCGNatural.cpp;
 
-%% Step 1: Specify ambiguity and damage level
+%%% Step 1: Specify ambiguity and damage level
 
 % Ambiguity setting: 'averse' or 'neutral'
 ambiguity = 'averse';
@@ -33,7 +33,7 @@ else
     disp('Error: please choose from ''high'',''weighted'' and ''low'' for damage level')
 end
 
-%% Step 2: Set up parameters
+%%% Step 2: Set up parameters
 McD = csvread('TCRE_MacDougallEtAl2017_update.csv');
 McD = McD./1000;
 par_lambda_McD = McD(:,1);
@@ -70,7 +70,7 @@ xi_d = -1.*(1-kappa);
 bar_gamma_2_plus = weight.*0+(1-weight).*gamma_2_plus;
 
 
-%% Step 3: Solve HJB
+%%% Step 3: Solve HJB
 r_min = 0;
 r_max = 9; %r = logR
 F_min = 0;
@@ -82,9 +82,14 @@ k_max = 18; %k = logK
 % ht = 25;
 % hk = 0.15;
 
-hr = 2;
-ht = 2000;
-hk = 9;
+% hr = 0.5;
+% ht = 25.0;
+% hk = 0.15;
+% 
+
+hr = 0.3;
+ht = 100;
+hk = 0.6;
 
 
 r = r_min:hr:r_max;
@@ -98,7 +103,7 @@ a = beta_f-5.*sqrt(var_beta_f);
 b = beta_f+5.*sqrt(var_beta_f);
 
 tol = 1e-8; % tol
-dt = 0.3 % epsilon
+dt = 0.3; % epsilon
 v0 = (kappa).*r_mat+(1-kappa).*k_mat-beta_f.*F_mat; % initial guess
 v1_initial = v0.*ones(size(r_mat));
 out = v0;
@@ -248,7 +253,7 @@ lhs_error = max(max(max(abs(out_comp - v1_initial))));
 lhs_err(iter) = lhs_error;
 
 
-while ((lhs_error > tol) && iter < 8) % check for convergence
+while ((lhs_error > tol) && iter < 11) % check for convergence
    tic
    vold = v0 .* ones(size(v0));
    
@@ -412,7 +417,7 @@ while ((lhs_error > tol) && iter < 8) % check for convergence
         + drift_distort + RE_total;   
     
 
-    pde_error_new = A.*v0+B_r.*v0_dr+B_t.*v0_dt+B_k.*v0_dk+C_rr.*v0_drr+C_kk.*v0_dkk+C_tt.*v0_dtt+D;
+    pde_error_new = A.*v0;%+B_r.*v0_dr+B_t.*v0_dt+B_k.*v0_dk+C_rr.*v0_drr+C_kk.*v0_dkk+C_tt.*v0_dtt+D;
     diff_pde_error = max(max(max(abs(pde_error_new - pde_error))));
     disp(['PDE Error: ', num2str(max(max(max(abs(pde_error)))))]) % check equation
     disp(['Change in pde error: ', num2str(diff_pde_error)]);
@@ -422,6 +427,7 @@ while ((lhs_error > tol) && iter < 8) % check for convergence
     rhs_err(iter) = max(max(max(abs(pde_error_new))));
     lhs_error = max(max(max(abs(out_comp - vold))));
     lhs_err(iter) = lhs_error;
+    disp(['LHS error is : ', num2str(lhs_err(iter))]);
 
     if lhs_error < tol
         fprintf('PDE Converges');
@@ -432,7 +438,7 @@ end
 
 save([ambiguity,'_',damage_level]); % save HJB solution
 
-%% Step 4: Simulation
+%%% Step 4: Simulation
 
 T = 100; % 100 years
 pers = 4*T; % quarterly
@@ -464,17 +470,20 @@ bar_gamma_2_plus = (1-weight).*gamma_2_plus;
 pi_tilde_1_func = @(x) pi_tilde_1func(log(x(:,1)),x(:,3),log(x(:,2)));
 pi_tilde_2_func = @(x) pi_tilde_2func(log(x(:,1)),x(:,3),log(x(:,2)));
 
+%%%%%%Base_model_done
 base_model_drift_func = @(x) exp(r_mat).*e...
         .*(gamma_1.*x +gamma_2.*F_mat.*x.^2 ...
         +bar_gamma_2_plus.*x.*(x.*F_mat-gamma_bar).^(power-1).*((x.*F_mat-gamma_bar)>=0))...
         .*normpdf(x,beta_f,sqrt(var_beta_f)); ...
 base_model_drift = quad_int(base_model_drift_func, [a], [b], n,'legendre');
 
+%%%% To be done Tomorrow
 mean_nordhaus = beta_tilde_1;
 lambda_tilde_nordhaus = lambda_tilde_1;
 nordhaus_model_drift = (gamma_1.*mean_nordhaus...
     +gamma_2.*(1./lambda_tilde_nordhaus+mean_nordhaus.^2).*F_mat).*exp(r_mat).*e;
 
+%%% To be done Tomorrow
 weitzman_model_drift_func = @(x) exp(r_mat).*e.*...
         q2_tilde_fnc(x) ...
         .*(gamma_1.*x +gamma_2.*F_mat.*x.^2 ...

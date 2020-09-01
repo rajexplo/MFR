@@ -17,9 +17,11 @@ using namespace std;
 
 int main(int argc, char **argv) {
 	Eigen::initParallel();
-
+    int nth = Eigen::nbThreads( );
+    cout << "Eigen will be using:" << nth << " cores" << endl;
 	time_t start, end;
-	
+    time_t cg1, cg2;
+    time_t loop1, loop2;	
 	ios_base::sync_with_stdio(false);
 	int ambiguity = 1;
 	int damage_level = 1;
@@ -27,7 +29,7 @@ int main(int argc, char **argv) {
 	float weight;
 
 	if (ambiguity == 1) {
-		xi_p = 1 / 4000.0;
+		xi_p = 1.0 / 4000.0;
 	} else {
 		xi_p = 1000.0;
 	}
@@ -55,18 +57,18 @@ int main(int argc, char **argv) {
 	betafV.fill(1.0);
 	double var_beta_f = (McD.col(0) - beta_f * betafV).array().square().sum()
 			/ (nel - 1);
-	float lambda = 1 / var_beta_f;
+	float lambda = 1.0 / var_beta_f;
 	float delta = 0.01;
 	float kappa = 0.032;
 	float sigma_g = 0.02;
 	float sigma_k = 0.0161;
 	float sigma_r = 0.0339;
-	double alpha = 0.115000000000000;
+	double alpha = 0.11500;
 	float phi_0 = 0.0600;
 	float phi_1 = 16.666666666666668;
 	float mu_k = -0.034977443912449;
-	float psi_0 = 0.112733407891680;
-	float psi_1 = 0.142857142857143;
+	double psi_0 = 0.112733407891680;
+	double psi_1 = 0.142857142857143;
 	int power = 2;
 	float gamma_1 = 0.00017675;
 	float gamma_2 = 2. * 0.0022;
@@ -103,23 +105,23 @@ int main(int argc, char **argv) {
 	// Solve HJB system
 
 	float r_min = 0.0;
-	decltype(r_min) r_max = 9.0;
-	decltype(r_min) F_min = 0.0;
-	decltype(r_min) F_max = 4000;
-	decltype(r_min) k_min = 0.0;
-	decltype(r_min) k_max = 18.0;
+	float r_max = 9.0;
+	float F_min = 0.0;
+	float F_max = 4000;
+	float k_min = 0.0;
+	float k_max = 18.0;
 
-	//float hr =0.1;//0.05;
-	//float ht = 50.0;//25.0;
-	//float hk = 0.5;//0.15;
+	float hr =0.3;//0.05;
+	float ht = 100.0;//25.0;
+	float hk = 0.6;//0.15;
 
-	float hr = 0.05;
-	float ht = 25.0;
-	float hk = 0.15;
+	//float hr = 0.05;
+	//float ht = 25.0;
+	//float hk = 0.15;
 
-        int rSize = ceil(((r_max - r_min) / hr)) + 1 ;
-        int FSize = ceil(((F_max - F_min) / ht)) + 1 ;
-        int kSize = ceil(((k_max - k_min) / hk)) + 1 ;
+    int rSize = ceil(((r_max - r_min) / hr)) + 1 ;
+    int FSize = ceil(((F_max - F_min) / ht)) + 1 ;
+    int kSize = ceil(((k_max - k_min) / hk)) + 1 ;
 
 	int Converged = 0;
 	int nums = 0;
@@ -140,9 +142,7 @@ int main(int argc, char **argv) {
 	int NZ = r_mat.size();
 	int NX = r_mat[0].rows();
 	int NY = r_mat[0].cols();
-	
-
-	const int quadrature = 1;
+    cout << "NX is " << NX << "NY is " << NY << "NZ is " << NZ << endl;	
 	const int n = 30;
 	float a = beta_f - 5.0 * sqrt(var_beta_f);
 	float b = beta_f + 5.0 * sqrt(var_beta_f);
@@ -164,8 +164,8 @@ int main(int argc, char **argv) {
 	decltype(v0) B1(NZ);
 	decltype(v0) e_hat(NZ);
 	decltype(v0) e(NZ);
-        //Simulation part
-        decltype(v0) base_model_drift(NZ);
+    //Simulation part
+    decltype(v0) base_model_drift(NZ);
 
 	MatrixXd v0_dt_temp(NX, NY);
 	v0_dt_temp.fill(0.0);
@@ -189,10 +189,10 @@ int main(int argc, char **argv) {
 		B1[i]=v0_dk_temp;
 		e_hat[i]=v0_dk_temp;
 		e[i]=v0_dk_temp;
-                base_model_drift[i]=v0_dk_temp;
+        base_model_drift[i]=v0_dk_temp;
 	}
 	
-        int iter = 0;
+    int iter = 0;
 
 	v0dt(v0_dt, v0, ht);
 	v0dr(v0_dr, v0, hr);
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
 	v0dtt(v0_dtt, v0, ht);
 	v0drr(v0_drr, v0, hr);
 	v0dkk(v0_dkk, v0, hk);
-
+    
    
 	float bcomp = crit / beta_f;
 	float C1 = -delta * kappa;
@@ -210,17 +210,16 @@ int main(int argc, char **argv) {
 	dummyMat.fill(1.0);
 
 	//#pragma omp parallel for	
-	for (int i = 0; i < B1.size(); i++) 
-	{
-		MatrixXd temp = beta_f * (F_mat[i]) - gamma_bar * dummyMat;
+	for (int i = 0; i < B1.size(); i++) {
+		MatrixXd temp = beta_f * (F_mat[i]).array() - gamma_bar;;
 		MatrixXd temp1 = temp.array().pow(power - 1);
 		MatrixXd comp = compMatrix(F_mat[i], bcomp, 1.0);
 		temp = temp1.cwiseProduct(comp);
 		MatrixXd etemp = r_mat[i].array().exp();
 		MatrixXd term1 = v0_dr[i];
 		MatrixXd term2 = xi_d
-				* (gamma_1 * dummyMat + gamma_2 * beta_f * F_mat[i]
-						+ gamma_2_plus * temp);
+				* (gamma_1  + gamma_2 * beta_f * (F_mat[i]).array()
+						+ gamma_2_plus * temp.array());
 		MatrixXd term3 = v0_dt[i].cwiseProduct(etemp);
 		B1[i] = term1 - term2.cwiseProduct(beta_f * etemp) - term3;
 		e[i] = -C1 * B1[i].cwiseInverse();
@@ -276,91 +275,93 @@ int main(int argc, char **argv) {
 
 	}
 
-	decltype(v0) a_1;
-	decltype(v0) b_1;
-	decltype(v0) c_1;
-	decltype(v0) lambda_tilde_1;
-	decltype(v0) beta_tilde_1;
-	decltype(v0) I_1;
-	decltype(v0) J_1_without_e;
-	decltype(v0) pi_tilde_1;
-	decltype(v0) I_2;
-	decltype(v0) J_2_with_e;
-	decltype(v0) pi_tilde_2;
-	decltype(v0) pi_tilde_1_norm;
-	decltype(v0) pi_tilde_2_norm;
-	decltype(v0) expec_e_sum;
-	decltype(v0) e_star;
-	decltype(v0) J_1;
-	decltype(v0) J_2;
-	decltype(v0) I_term;
-	decltype(v0) R_1;
-	decltype(v0) R_2;
-	decltype(v0) drift_distort;
-	decltype(v0) RE;
-	decltype(v0) RE_total;
-	decltype(v0) A;
-	decltype(v0) B_r;
-	decltype(v0) B_k;
-	decltype(v0) B_t;
-	decltype(v0) C_rr;
-	decltype(v0) C_kk;
-	decltype(v0) C_tt;
-	decltype(v0) D;
-	decltype(v0) out_comp;
-	decltype(v0) q;
-	decltype(v0) pde_error;
-	decltype(v0) lhs_error_mat;
-	decltype(v0) istar;
-	decltype(v0) jstar;
-	decltype(v0) qstar;
-	decltype(v0) pde_error_new;
+	decltype(v0) a_1(NZ);
+	decltype(v0) b_1(NZ);
+	decltype(v0) c_1(NZ);
+	decltype(v0) lambda_tilde_1(NZ);
+	decltype(v0) beta_tilde_1(NZ);
+	decltype(v0) I_1(NZ);
+	decltype(v0) J_1_without_e(NZ);
+	decltype(v0) pi_tilde_1(NZ);
+	decltype(v0) I_2(NZ);
+	decltype(v0) J_2_with_e(NZ);
+	decltype(v0) pi_tilde_2(NZ);
+	decltype(v0) pi_tilde_1_norm(NZ);
+	decltype(v0) pi_tilde_2_norm(NZ);
+	decltype(v0) expec_e_sum(NZ);
+	decltype(v0) e_star(NZ);
+	decltype(v0) J_1(NZ);
+	decltype(v0) J_2(NZ);
+	decltype(v0) I_term(NZ);
+	decltype(v0) R_1(NZ);
+	decltype(v0) R_2(NZ);
+	decltype(v0) drift_distort(NZ);
+	decltype(v0) RE(NZ);
+	decltype(v0) RE_total(NZ);
+	decltype(v0) A(NZ);
+	decltype(v0) B_r(NZ);
+	decltype(v0) B_k(NZ);
+	decltype(v0) B_t(NZ);
+	decltype(v0) C_rr(NZ);
+	decltype(v0) C_kk(NZ);
+	decltype(v0) C_tt(NZ);
+	decltype(v0) D(NZ);
+	decltype(v0) out_comp(NZ);
+	decltype(v0) q(NZ);
+	decltype(v0) pde_error(NZ);
+	decltype(v0) lhs_error_mat(NZ);
+	decltype(v0) istar(NZ);
+	decltype(v0) jstar(NZ);
+	decltype(v0) qstar(NZ);
+	decltype(v0) pde_error_new(NZ);
 
 	MatrixXd beta_fM = beta_f * dummyMat;
-
-	for (int i = 0; i < r_mat.size(); i++) {
-		a_1.push_back(v0_dr_temp);
-		b_1.push_back(v0_dr_temp);
-		c_1.push_back(v0_dr_temp);
-		lambda_tilde_1.push_back(v0_dr_temp);
-		beta_tilde_1.push_back(v0_dr_temp);
-		I_1.push_back(v0_dr_temp);
-		J_1_without_e.push_back(v0_dr_temp);
-		pi_tilde_1.push_back(v0_dr_temp);
-		I_2.push_back(v0_dr_temp);
-		J_2_with_e.push_back(v0_dr_temp);
-		pi_tilde_2.push_back(v0_dr_temp);
-		pi_tilde_1_norm.push_back(v0_dr_temp);
-		pi_tilde_2_norm.push_back(v0_dr_temp);
-		expec_e_sum.push_back(v0_dr_temp);
-		B1.push_back(v0_dr_temp);
-		e.push_back(v0_dr_temp);
-		e_star.push_back(v0_dr_temp);
-		J_1.push_back(v0_dr_temp);
-		J_2.push_back(v0_dr_temp);
-		I_term.push_back(v0_dr_temp);
-		R_1.push_back(v0_dr_temp);
-		R_2.push_back(v0_dr_temp);
-		drift_distort.push_back(v0_dr_temp);
-		RE.push_back(v0_dr_temp);
-		RE_total.push_back(v0_dr_temp);
-		B_r.push_back(v0_dr_temp);
-		B_k.push_back(v0_dr_temp);
-		B_t.push_back(v0_dr_temp);
-		C_rr.push_back(v0_dr_temp);
-		C_kk.push_back(v0_dr_temp);
-		C_tt.push_back(v0_dr_temp);
-		D.push_back(v0_dr_temp);
-		out_comp.push_back(v0_dr_temp);
-		q.push_back(v0_dr_temp);
-		pde_error.push_back(v0_dr_temp);
-		lhs_error_mat.push_back(v0_dr_temp);
-		istar.push_back(v0_dr_temp);
-		jstar.push_back(v0_dr_temp);
-		qstar.push_back(v0_dr_temp);
-		pde_error_new.push_back(v0_dr_temp);
+    //#pragma omp parallel for
+	for (int i = 0; i < NZ; i++) {
+		a_1[i] = v0_dr_temp;
+		b_1[i] = v0_dr_temp;
+		c_1[i] = v0_dr_temp;
+		lambda_tilde_1[i] = v0_dr_temp;
+		beta_tilde_1[i] = v0_dr_temp;
+		I_1[i] = v0_dr_temp;
+		J_1_without_e[i] = v0_dr_temp;
+		pi_tilde_1[i] = v0_dr_temp;
+		I_2[i] = v0_dr_temp;
+		J_2_with_e[i] = v0_dr_temp;
+		pi_tilde_2[i] = v0_dr_temp;
+		pi_tilde_1_norm[i] = v0_dr_temp;
+		pi_tilde_2_norm[i] = v0_dr_temp;
+		expec_e_sum[i] = v0_dr_temp;
+		B1[i] = v0_dr_temp;
+		e[i] = v0_dr_temp;
+		e_star[i] = v0_dr_temp;
+		J_1[i] = v0_dr_temp;
+		J_2[i] = v0_dr_temp;
+		I_term[i] = v0_dr_temp;
+		R_1[i] = v0_dr_temp;
+		R_2[i] = v0_dr_temp;
+		drift_distort[i]=v0_dr_temp;
+		RE[i]=v0_dr_temp;
+		RE_total[i] = v0_dr_temp;
+		B_r[i] = v0_dr_temp;
+		B_k[i] = v0_dr_temp;
+		B_t[i] = v0_dr_temp;
+		C_rr[i] = v0_dr_temp;
+		C_kk[i] = v0_dr_temp;
+		C_tt[i] = v0_dr_temp;
+		D[i] = v0_dr_temp;
+		A[i] = v0_dr_temp;
+        out_comp[i] = v0_dr_temp;
+		q[i] = v0_dr_temp;
+		pde_error[i] = v0_dr_temp;
+		lhs_error_mat[i] = v0_dr_temp;
+		istar[i] = v0_dr_temp;
+		jstar[i] = v0_dr_temp;
+		qstar[i] = v0_dr_temp;
+		pde_error_new[i]=v0_dr_temp;
 	}
-	b1c1(r_mat, F_mat, e_hat, b_1, c_1, xi_d, gamma_1, gamma_2);
+    	
+    b1c1(r_mat, F_mat, e_hat, b_1, c_1, xi_d, gamma_1, gamma_2);
 	lambdaTilde1(c_1, lambda_tilde_1, dummyMat, xi_p, lambda);
 	betaTilde1(lambda_tilde_1, beta_tilde_1, b_1, c_1, beta_fM, xi_p);
 	I1(a_1, dummyMat, lambda_tilde_1, beta_tilde_1, I_1, xi_p, lambda, beta_f);
@@ -383,16 +384,18 @@ int main(int argc, char **argv) {
 	intData->beta_f = beta_f;
 	intData->var_beta_f = var_beta_f;
 	vector<MatrixXd> scale_2;
-	scale_2 = quad_int(intData, a, b, n);
-    	I2fnc(I_2, scale_2, xi_p);
-        vector<MatrixXd> J_2_without_e = quad_int_J2(intData, scale_2, a, b, n);
-	for (int k = 0; k < J_2_with_e.size(); k++) {
+	
+    scale_2 = quad_int(intData, a, b, n);
+    I2fnc(I_2, scale_2, xi_p);
+    vector<MatrixXd> J_2_without_e = quad_int_J2(intData, scale_2, a, b, n);
+	
+    for (int k = 0; k < J_2_with_e.size(); k++) {
 		J_2_with_e[k] = J_2_without_e[k].cwiseProduct(e_hat[k]);
 		pi_tilde_2[k] = (1 - weight) * (-1 / xi_p * I_2[k]).array().exp();
 		pi_tilde_1_norm[k] = pi_tilde_1[k].cwiseProduct(
 				(pi_tilde_1[k] + pi_tilde_2[k]).cwiseInverse());
 		
-        	pi_tilde_2_norm[k] = 1.0 * dummyMat - pi_tilde_1_norm[k];
+        pi_tilde_2_norm[k] = 1.0 * dummyMat - pi_tilde_1_norm[k];
 		expec_e_sum[k] = pi_tilde_1_norm[k].cwiseProduct(J_1_without_e[k])
 				+ pi_tilde_2_norm[k].cwiseProduct(J_2_without_e[k]);
 		MatrixXd temp = r_mat[k].array().exp();
@@ -429,25 +432,26 @@ int main(int argc, char **argv) {
 	}
 
 	float coff = 0.5 * (pow(sigma_k, 2));
-	for (int k = 0; k < r_mat.size(); k++) {
-		A.push_back(-delta * dummyMat);
+	for (int k = 0; k < NZ; k++) {
+		A[k]=-delta * dummyMat;
 		MatrixXd temp0 = psi_0 * (jtemp[k].array().pow(psi_1));
 		MatrixXd temp1 = (psi_1 * (k_mat[k] - r_mat[k])).array().exp();
 		MatrixXd temp2 = (dummyMat + phi_1 * i_k[k]).array().log();
 		B_r[k] = -e_star[k]+ temp1.cwiseProduct(temp0)
 				- 0.5 * (pow(sigma_r, 2)) * dummyMat;
-		B_k[k] = mu_k * dummyMat + phi_0 * (temp2) - coff * dummyMat;
+		B_k[k] = mu_k  + phi_0 * (temp2).array() - coff;
 		temp0 = r_mat[k].array().exp();
 		B_t[k] = e_star[k].cwiseProduct(temp0);
 		C_rr[k] = 0.5 * pow(sigma_r, 2) * dummyMat;
 		C_kk[k] = 0.5 * pow(sigma_k, 2) * dummyMat;
 		MatrixXd term0 = e_star[k].array().log();
-		MatrixXd term1 = alpha * dummyMat - i_k[k] - jtemp[k];
+		MatrixXd term1 = alpha - (i_k[k]).array() - (jtemp[k]).array();
 		MatrixXd term2 = term1.array().log();
 		D[k] = delta * kappa * term0 + delta * kappa * r_mat[k]
 				+ delta * (1.0 - kappa) * (term2 + k_mat[k]) + drift_distort[k]
 				+ RE_total[k];
-	}
+}
+   
 
 	int sz = r_mat.size() * r_mat[0].rows() * r_mat[0].cols();
 	MatrixXd stateSpace(sz, 3);
@@ -473,7 +477,8 @@ int main(int argc, char **argv) {
 	VectorXd C_ttf = flatMat(C_tt);
 	VectorXd C_kkf = flatMat(C_kk);
 	VectorXd D_f = flatMat(D);
-	MatrixXd Dftemp(Map < MatrixXd > (D_f.data(), D_f.rows(), D_f.cols()));
+	
+    MatrixXd Dftemp(Map < MatrixXd > (D_f.data(), D_f.rows(), D_f.cols()));
 	VectorXd v_0f = flatMat(v0);
 	MatrixXd v_0ftemp(Map < MatrixXd > (v_0f.data(), v_0f.rows(), v_0f.cols()));
 
@@ -485,14 +490,10 @@ int main(int argc, char **argv) {
 	Cf.col(1) = C_ttf;
 	Cf.col(2) = C_kkf;
 	
-
-
 	//cout << "Number of Threads: " << nth << endl;
 
 	VectorXd sol = solveCG(stateSpace, Aftemp, Bf, Cf, Dftemp, v_0ftemp, dt );
-
-   
-
+     
 	int nrows = r_mat[0].rows();
 	int ncols = r_mat[0].cols();
 	int element = nrows * ncols;
@@ -500,29 +501,26 @@ int main(int argc, char **argv) {
 	mat3Dresize(out_comp, sol, out_comp.size(), nrows, ncols, element);
 
 	v0 = out_comp;
-
-	for (int k = 0; k < q.size(); k++) {
-		MatrixXd term1 = alpha * dummyMat - i_k[k] - jtemp[k];
+    
+    
+	for (int k = 0; k < NZ; k++) {
+		MatrixXd term1 = alpha  - (i_k[k]).array() - (jtemp[k]).array();
 		MatrixXd term2 = term1.cwiseInverse();
 		q[k] = delta * (1 - kappa) * term2;
 	}
 
+   
 	float eta = 0.05;
 	float diff_pde_error = 1.0;
 
-	for (int k = 0; k < pde_error.size(); k++) {
+	for (int k = 0; k < NZ; k++) {
 		pde_error[k] = A[k].cwiseProduct(v0[k]) + B_r[k].cwiseProduct(v0_dr[k])
 				+ B_t[k].cwiseProduct(v0_dt[k]) + B_k[k].cwiseProduct(v0_dk[k])
 				+ C_rr[k].cwiseProduct(v0_drr[k])
 				+ C_kk[k].cwiseProduct(v0_dkk[k])
 				+ C_tt[k].cwiseProduct(v0_dtt[k]) + D[k];
 	}
-
-    //for(int i=0; i < F_mat.size(); i++ ){
-    //    cout << "PDE_error is " << out_comp[i] << setprecision(16) << endl; 
-   	
-    //}
-
+    
 
 
 	vector<double> rhs_err;
@@ -533,10 +531,8 @@ int main(int argc, char **argv) {
 
 	cout << "lhs_err is " << lhs_err[iter] << endl;
     
-    
-
-
-	while ((lhs_err[iter] - tol) > EPS) {
+    while ((lhs_err[iter] - tol) > EPS) {
+	//while (((lhs_err[iter] - tol) > EPS) && iter < 10) {
 		
 		time(&start);
 			
@@ -575,12 +571,16 @@ int main(int argc, char **argv) {
 		Cf.col(0) = C_rrf;
 		Cf.col(1) = C_ttf;
 		Cf.col(2) = C_kkf;
-		
-		v_0f = flatMat(v0);					
-		  
-	 		   	
+	    	  
+	    time(&cg1);  		   	
 	   	sol = solveCG(stateSpace, Aftemp, Bf, Cf, Dftemp, v_0ftemp, dt );	
-							
+	    time(&cg2);
+        float elapsedSol=cg2-cg1;	
+        
+        cout << "Time taken by CG Solver  : " << fixed << elapsedSol
+				<< setprecision(5);
+		cout << " sec " << endl;
+				
 		mat3Dresize(out_comp, sol, out_comp.size(), nrows, ncols, element);
 		
 		float err = maxVecErr(out_comp, vold, 1.0);
@@ -609,7 +609,7 @@ int main(int argc, char **argv) {
 			iStar(v0_dk, q, istar, phi_0, phi_1, dummyMat);
 			jStar(v0_dr, r_mat, k_mat, q, jstar, psi_0, psi_1);
 			qStar(istar, jstar, q, qstar, dummyMat, eta, delta, kappa, alpha);
-			double err = maxVecErr(qstar, q, eta);
+            double err = maxVecErr(qstar, q, eta);
 			if ((err - pow(10.0, -5)) <= EPS) {
 				Converged = 1;
 			}
@@ -619,39 +619,35 @@ int main(int argc, char **argv) {
 			nums += 1;
 		}
 		
-	    decltype(v0) a_1;
 		
 		for(int k=0; k < NZ; k++){
-			a_1.push_back(v0_dr_temp);
+			a_1[k]=v0_dr_temp;
 		}
 		
 		b1c1(r_mat, F_mat, e_hat, b_1, c_1, xi_d, gamma_1, gamma_2);
 		lambdaTilde1(c_1, lambda_tilde_1, dummyMat, xi_p, lambda);
 		betaTilde1(lambda_tilde_1, beta_tilde_1, b_1, c_1, beta_fM, xi_p);
-		
-		
-		
 		I1(a_1, dummyMat, lambda_tilde_1, beta_tilde_1, I_1, xi_p, lambda,
 				beta_f);
 		J1Witoute(beta_tilde_1, lambda_tilde_1, F_mat, r_mat, J_1_without_e,
 				gamma_1, gamma_2, xi_d);
 		piTilde1(pi_tilde_1, I_1, weight, xi_p);
-		
 		scale_2 = quad_int(intData, a, b, n);
 		I2fnc(I_2, scale_2, xi_p);		
-		
 		vector <MatrixXd> J_2_without_e = quad_int_J2(intData, scale_2, a, b, n);
-				
 		
+        MatrixXd temp;
+
+	    //#pragma omp prallel for private(temp)	
 		for (int k = 0; k < J_2_with_e.size(); k++) {
 			J_2_with_e[k] = J_2_without_e[k].cwiseProduct(e_hat[k]);
 			R_2[k] = (1.0 / xi_p) * (I_2[k] - J_2_with_e[k]);
-			pi_tilde_2[k] = (1 - weight) * (-1 / xi_p * I_2[k]).array().exp();
+			pi_tilde_2[k] = (1 - weight) * (- (1 / xi_p) * I_2[k]).array().exp();
 			pi_tilde_1_norm[k] = pi_tilde_1[k].cwiseProduct((pi_tilde_1[k] + pi_tilde_2[k]).cwiseInverse());
-			pi_tilde_2_norm[k] = 1.0 * dummyMat - pi_tilde_1_norm[k];
+			pi_tilde_2_norm[k] = 1.0 - pi_tilde_1_norm[k].array();
 			expec_e_sum[k] = pi_tilde_1_norm[k].cwiseProduct(J_1_without_e[k])
 					+ pi_tilde_2_norm[k].cwiseProduct(J_2_without_e[k]);
-			MatrixXd temp = r_mat[k].array().exp();
+			temp = r_mat[k].array().exp();
 			B1[k] = v0_dr[k] - v0_dt[k].cwiseProduct(temp) - expec_e_sum[k];
 			C1 = -delta * kappa;
 			e[k] = -C1 * B1[k].cwiseInverse();
@@ -666,15 +662,12 @@ int main(int argc, char **argv) {
 		}
 			
 		
-		
-		
-		
-		if (weight == 0 || weight == 1) {
+		if ((weight == 0) || (weight == 1)) {
             //#pragma omp parallel for
-			for (int k = 0; k < RE.size(); k++) {
+			for (int k = 0; k < NZ; k++) {
 				RE[k] = R_1[k].cwiseProduct(pi_tilde_1_norm[k])
 						+ R_2[k].cwiseProduct(pi_tilde_2_norm[k]);
-				RE_total[k] = 1.0 * xi_p * RE[k];
+				RE_total[k] = xi_p * RE[k];
 			}
 		} else {
 			MatrixXd temp1;
@@ -693,21 +686,23 @@ int main(int argc, char **argv) {
 		
 	
 	
-			
-		
-		for (int k = 0; k < r_mat.size(); k++) {
+	    
+        		
+		for (int k = 0; k < NZ; k++) {
 			A[k]=-delta * dummyMat;
-			MatrixXd temp0 = psi_0 * (jtemp[k].array().pow(psi_1));
-			MatrixXd temp1 = (psi_1 * (k_mat[k] - r_mat[k])).array().exp();
+			MatrixXd temp0 = psi_0* (jtemp[k].array().pow(psi_1));
+           	MatrixXd temp1 = (psi_1 * (k_mat[k] - r_mat[k])).array().exp();
 			MatrixXd temp2 = (dummyMat + phi_1 * i_k[k]).array().log();
-		        B_r[k] = -e_star[k] + temp1.cwiseProduct(temp0)- 0.5 * (pow(sigma_r, 2)) * dummyMat;
-			B_k[k] = mu_k * dummyMat + phi_0 * (temp2) - coff * dummyMat;
+
+            B_r[k] = -e_star[k]+ temp1.cwiseProduct(temp0)- 0.5 * (pow(sigma_r, 2)) * dummyMat;
+			B_k[k] = mu_k  + phi_0 * (temp2).array() - coff ;
 			temp0 = r_mat[k].array().exp();
 			B_t[k] = e_star[k].cwiseProduct(temp0);
-			C_rr[k] = 0.5 * pow(sigma_r, 2) * dummyMat;
-			C_kk[k] = 0.5 * pow(sigma_k, 2) * dummyMat;
-			MatrixXd term0 = e_star[k].array().log();
-			MatrixXd term1 = alpha * dummyMat - i_k[k] - jtemp[k];
+			C_rr[k].fill(0.5 * pow(sigma_r, 2));
+			C_kk[k].fill(0.5 * pow(sigma_k, 2));
+			C_tt[k].fill(0.0);
+            MatrixXd term0 = e_star[k].array().log();
+			MatrixXd term1 = alpha - (i_k[k]).array() - (jtemp[k]).array();
 			MatrixXd term2 = term1.array().log();
 			D[k] = delta * kappa * term0 + delta * kappa * r_mat[k]
 					+ delta * (1.0 - kappa) * (term2 + k_mat[k]) + drift_distort[k]
@@ -715,31 +710,29 @@ int main(int argc, char **argv) {
 			
 		}
 		
-		
-		
-//#pragma omp parallel for
-		for (int k = 0; k < pde_error.size(); k++) {
-			pde_error_new[k] = A[k].cwiseProduct(v0[k])+ B_r[k].cwiseProduct(v0_dr[k])
+        time(&loop1);		
+#pragma omp parallel for
+		for (int k = 0; k < NZ; k++) {
+			pde_error_new[k] = A[k].cwiseProduct(v0[k])+B_r[k].cwiseProduct(v0_dr[k])
 					+ B_t[k].cwiseProduct(v0_dt[k]) + B_k[k].cwiseProduct(v0_dk[k])
 					+ C_rr[k].cwiseProduct(v0_drr[k])
 					+ C_kk[k].cwiseProduct(v0_dkk[k])
 					+ C_tt[k].cwiseProduct(v0_dtt[k]) + D[k];
 		}
 
-
-       //cout << "Debug 1" << pde_error_new[10].col(10) << endl;
-		
-		
+        time(&loop2);
+        cout << "Loop time is " << loop2 - loop1 << endl;
 		diff_pde_error=maxVecErr(pde_error_new, pde_error, 1.0);
 		rhs_err.push_back(maxVec(pde_error_new));
 		
-        cout << "PDE Error: " << " " << rhs_err[iter-1] << endl;
-		cout << "Change in PDE Error: " << " " << diff_pde_error << endl;
+        cout << "PDE Error: " << " " << fixed << rhs_err[iter-1] << setprecision(16) << endl;
+		cout << "Change in PDE Error: " << " " << fixed << diff_pde_error << setprecision(16) << endl;
 		pde_error=pde_error_new;
 		lhs_err.push_back(maxVecErr(out_comp, vold, 1.0));
-		
+		cout << "lhs_err is  " << lhs_err[iter] << endl;
+
 		if ((lhs_err[iter]-tol) < EPS){
-			cout << "PDE Converges" << endl;
+            cout << "PDE Converges" << endl;
 		}
 	    
 		time(&end);			
@@ -749,11 +742,6 @@ int main(int argc, char **argv) {
 		cout << " sec " << endl;
 			
 	}
-
-    // Simulation part
-       //base_model_drift=quad_int_bmdf(intData, e, bar_gamma_2_plus, a, b, n);
       
-       
-
 }
 
